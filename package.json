@@ -1,0 +1,28 @@
+{
+  "name": "ruru",
+  "version": "0.0.1",
+  "description": "Another react framework",
+  "main": "index.js",
+  "author": "Mbechezi Nawo",
+  "license": "MIT",
+  "bin": {
+    "ruru": "bin/ruru"
+  },
+  "scripts": {
+    "dev": "bin/ruru dev"
+  },
+  "dependencies": {
+    "@babel/core": "^7.19.0",
+    "@babel/preset-env": "^7.19.0",
+    "@babel/preset-react": "^7.10.4",
+    "babel-loader": "^8.2.5",
+    "react-router-dom": "^5.3.0",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.10.1"
+  },
+  "devDependencies": {
+    "react": "^18.0",
+    "react-dom": "^18.0"
+  }
+}
