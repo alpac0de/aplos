@@ -1,103 +1,22 @@
 #!/usr/bin/env node
 
-let fs = require('fs');
-let http = require('http');
-const {exec} = require("child_process");
+const { Command } = require('commander');
+const devServer = require('../src/command/devSever');
+const build = require('../src/command/build');
 
-const [, , ...args] = process.argv;
+const program = new Command();
+program
+    .name('Ruru')
+    .description('Another React Framework')
+    .version('0.0.1');
 
-let projectDirectory = process.cwd();
+program.command('dev')
+    .description('Split a string into substrings and display as an array')
+    .action(devServer);
 
-const pages = [];
-const capitalize = s => s && s[0].toUpperCase() + s.slice(1)
+program.command('build')
+    .description('Build assets')
+    .option('mode', 'Providing the mode configuration option tells webpack to use its built-in optimizations accordingly', 'development')
+    .action(build);
 
-let filenames = fs.readdirSync(process.cwd() + "/src/pages");
-filenames.forEach(file => {
-    let name = file.replace('.js', '');
-    let capitalizeName = capitalize(name);
-
-    pages.push({
-        "name": capitalizeName,
-        "path": "/" + name,
-        "component": capitalizeName
-    })
-});
-
-let template = `
-import React from 'react';
-import ReactDOM from 'react-dom';
-{components}
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
-
-function App() {
-    return <Router>
-            <Switch>
-               {routes}
-            </Switch>
-        </Router>
-}
-
-ReactDOM.render(
-    <App />,
-    document.getElementById('root')
-);
-`;
-
-let router = pages.map((route) => {
-    return '<Route path="' + route.path + '"><' + route.name + ' /></Route>';
-});
-console.log(router);
-
-template = template.replace('{routes}', router.join(' '));
-
-let components = pages.map((route) => {
-    return 'import ' + route.name + ' from "' + projectDirectory + '/src/pages/' + route.name.toLowerCase() + '.js"; ';
-})
-
-template = template.replace('{components}', components.join(' '));
-
-fs.writeFileSync(projectDirectory + '/.ruru/generated/app.js', template);
-
-let runtime_dir = __dirname + "/../node_modules";
-
-// exec(runtime_dir + "/.bin/webpack-cli --config " + runtime_dir + "/../webpack.config.js --entry " + projectDirectory + "/.ruru/generated/app.js", (error, stdout, stderr) => {
-//     if (error) {
-//         console.log(`error: ${error.message}`);
-//         return;
-//     }
-//     if (stderr) {
-//         console.log(`stderr: ${stderr}`);
-//         return;
-//     }
-//     console.log(`${stdout}`);
-// });
-
-const port = 3000;
-const path = require('path');
-const Webpack = require('webpack');
-const WebpackDevServer = require('webpack-dev-server');
-const webpackConfig = require(runtime_dir + '/../webpack.config.js');
-webpackConfig.entry  = [
-    projectDirectory + "/.ruru/generated/app.js"
-];
-
-console.log(webpackConfig);
-
-const compiler = Webpack(webpackConfig);
-const devServerOptions = { open: false,  static: {
-    directory: path.join(__dirname+ '../src/client/', 'public')
-}};
-const server = new WebpackDevServer(devServerOptions, compiler);
-
-const runServer = async () => {
-    console.log('Starting server...');
-    await server.start();
-};
-
-runServer();
-
+program.parse();
