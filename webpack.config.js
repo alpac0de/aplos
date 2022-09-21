@@ -1,8 +1,10 @@
 const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
     output: {
-        path: path.resolve(__dirname, "./src/client/public/dist"),
+        path: path.resolve(process.cwd(), "./public/dist"),
+        publicPath: '/',
     },
     module: {
         rules: [
@@ -12,10 +14,16 @@ module.exports = {
                 use: {
                     loader: 'babel-loader',
                     options: {
+                        "plugins": [['@babel/plugin-proposal-decorators', { legacy: true }]],
                         "presets": ["@babel/preset-env", "@babel/preset-react"]
                     }
                 }
             }
         ]
-    }
+    },
+    plugins: [
+        new HtmlWebpackPlugin({
+            template:  path.resolve(__dirname, "./src/client/public/index.html"),
+        })
+    ]
 }

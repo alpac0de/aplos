@@ -10,7 +10,7 @@ program
     .description('Another React Framework')
     .version('0.0.1');
 
-program.command('dev')
+program.command('server')
     .description('Split a string into substrings and display as an array')
     .action(devServer);
 

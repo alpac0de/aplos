@@ -57,14 +57,19 @@ module.exports = () => {
 
     const WebpackDevServer = require('webpack-dev-server');
     const webpackConfig = require(runtime_dir + '/../webpack.config.js');
+    webpackConfig.mode = 'development';
     webpackConfig.entry  = [
         projectDirectory + "/.ruru/generated/app.js"
     ];
 
     const compiler = Webpack(webpackConfig);
-    const devServerOptions = { open: false,  static: {
-            directory: path.join(__dirname+ '../src/client/', 'public')
-        }};
+    const devServerOptions = {
+        open: false,
+        historyApiFallback: true,
+        static: {
+            directory: path.join(__dirname+ '/../client/', 'public'),
+        }
+    };
     const server = new WebpackDevServer(devServerOptions, compiler);
 
     const runServer = async () => {

@@ -8,10 +8,18 @@ import {
   Link
 } from "react-router-dom";
 
+function NoMatch() {
+    return <div>Not found</div>
+}
+
 function App() {
     return <Router>
             <Switch>
                {routes}
+
+                <Route path="*">
+                    <NoMatch />
+                </Route>
             </Switch>
         </Router>
 }
