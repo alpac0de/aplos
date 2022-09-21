@@ -40,16 +40,16 @@ module.exports = () => {
     let template = fs.readFileSync(__dirname + "/../../templates/root.jsx").toString();
 
     let router = pages.map((route) => {
-        return '<Route path="' + route.path + '"><' + route.name + ' /></Route>';
+        return '<Route path="' + route.path + '" element="<' + route.name + ' />" />';
     });
 
     template = template.replace('{routes}', router.join(' '));
 
     let components = pages.map((route) => {
-        return 'import ' + route.name + ' from "' + projectDirectory + '/src/pages/' + route.name.toLowerCase() + '.js"; ';
+        return 'import ' + route.name + ' from "' + projectDirectory + '/src/pages/' + route.name.toLowerCase() + '.js"; ' + "\n";
     })
 
-    template = template.replace('{components}', components.join(' '));
+    template = template.replace('{components}', components.join(''));
 
     fs.writeFileSync(projectDirectory + '/.ruru/generated/app.js', template);
 
