@@ -48,7 +48,7 @@ module.exports = () => {
     let router = pages.map((route) => {
         let pathName = formatPath(route.name);
 
-        return '<Route path="' + route.path + '" element="<' + pathName + ' />" />';
+        return '<Route path="' + route.path + '"> <' + pathName + ' /> </Route>';
     });
 
     template = template.replace('{routes}', router.join(' '));
