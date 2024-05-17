@@ -22,13 +22,16 @@ module.exports = () => {
     const pages = [];
     const capitalize = s => s && s[0].toUpperCase() + s.slice(1)
 
-    let filenames = fs.readdirSync(process.cwd() + "/src/pages");
+    let filenames = getFiles(process.cwd() + "/src/pages");
     const routes = aplos.rewrites();
 
     filenames.forEach(file => {
         let name = file.replace('.js', '');
-        let capitalizeName = capitalize(name);
-        let path = capitalizeName === 'Index' ? '/':  '/'+ name;
+        let nameParts = name.split('/');
+
+        let fileName = nameParts.pop();
+        let capitalizeName = (capitalize(nameParts[1]) + capitalize(fileName)).replace('undefined', '');
+        let path = capitalizeName === 'Index' ? '/':  name;
 
         let found = routes.find(element => element.source === path);
 
@@ -36,10 +39,13 @@ module.exports = () => {
             path = found.destination
         }
 
+        path = path.replace(/\[(.*?)]/g, ':$1');
+
         pages.push({
             "name": capitalizeName,
             "path": path,
-            "component": capitalizeName
+            "component": capitalizeName,
+            "file": file.replaceAll('//', '/'),
         })
     });
 
@@ -48,14 +54,14 @@ module.exports = () => {
     let router = pages.map((route) => {
         let pathName = formatPath(route.name);
 
-        return '<Route path="' + route.path + '"> <' + pathName + ' /> </Route>';
+        return '<Route path="' + route.path + '"> <' + pathName + ' /> </Route>'+ "\n";
     });
 
     template = template.replace('{routes}', router.join(' '));
 
     let components = pages.map((route) => {
         let pathName = formatPath(route.name);
-        return 'import ' + pathName + ' from "' + projectDirectory + '/src/pages/' + route.name.toLowerCase() + '.js"; ' + "\n";
+        return 'import ' + pathName + ' from "' + projectDirectory + '/src/pages/' + route.file + '"; ' + "\n";
     })
 
     template = template.replace('{components}', components.join(''));
@@ -91,6 +97,22 @@ module.exports = () => {
     };
 
     runServer();
+}
+
+function getFiles(dirPath) {
+    let files = fs.readdirSync(dirPath);
+    let filelist = [];
+    files.forEach(function (file) {
+        if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
+            filelist = filelist.concat(getFiles(path.join(dirPath, file)));
+        }
+        else {
+            let filePath = path.join(dirPath, file);
+            filePath = filePath.replace(process.cwd() + "/src/pages", ""); // Supprime le début du chemin
+            filelist.push(filePath);
+        }
+    });
+    return filelist;
 }
 
 function formatPath(path) {
