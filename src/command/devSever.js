@@ -1,28 +1,34 @@
 const path = require("path");
 const fs = require("fs");
 const Webpack = require('webpack');
-let ruru = {};
+let aplos = {
+    rewrites: () => []
+};
 
 try {
-    ruru = require(process.cwd() + "/ruru.config.js");
+    aplos = require(process.cwd() + "/aplos.config.js");
 } catch (error) {
 }
 
-console.log(ruru);
+console.log(aplos);
 
 module.exports = () => {
     let projectDirectory = process.cwd();
+
+    if (!fs.existsSync(projectDirectory + '/.aplos/')) {
+        fs.mkdirSync(projectDirectory + '/.aplos/');
+    }
 
     const pages = [];
     const capitalize = s => s && s[0].toUpperCase() + s.slice(1)
 
     let filenames = fs.readdirSync(process.cwd() + "/src/pages");
-    const routes = ruru.rewrites();
+    const routes = aplos.rewrites();
 
     filenames.forEach(file => {
         let name = file.replace('.js', '');
         let capitalizeName = capitalize(name);
-        let path = '/'+ name;
+        let path = capitalizeName === 'Index' ? '/':  '/'+ name;
 
         let found = routes.find(element => element.source === path);
 
@@ -40,18 +46,25 @@ module.exports = () => {
     let template = fs.readFileSync(__dirname + "/../../templates/root.jsx").toString();
 
     let router = pages.map((route) => {
-        return '<Route path="' + route.path + '" element="<' + route.name + ' />" />';
+        let pathName = formatPath(route.name);
+
+        return '<Route path="' + route.path + '" element="<' + pathName + ' />" />';
     });
 
     template = template.replace('{routes}', router.join(' '));
 
     let components = pages.map((route) => {
-        return 'import ' + route.name + ' from "' + projectDirectory + '/src/pages/' + route.name.toLowerCase() + '.js"; ' + "\n";
+        let pathName = formatPath(route.name);
+        return 'import ' + pathName + ' from "' + projectDirectory + '/src/pages/' + route.name.toLowerCase() + '.js"; ' + "\n";
     })
 
     template = template.replace('{components}', components.join(''));
 
-    fs.writeFileSync(projectDirectory + '/.ruru/generated/app.js', template);
+    if (!fs.existsSync(projectDirectory + '/.aplos/generated')) {
+        fs.mkdirSync(projectDirectory + '/.aplos/generated');
+    }
+
+    fs.writeFileSync(projectDirectory + '/.aplos/generated/app.js', template);
 
     let runtime_dir = __dirname + "/..";
 
@@ -59,7 +72,7 @@ module.exports = () => {
     const webpackConfig = require(runtime_dir + '/../webpack.config.js');
     webpackConfig.mode = 'development';
     webpackConfig.entry  = [
-        projectDirectory + "/.ruru/generated/app.js"
+        projectDirectory + "/.aplos/generated/app.js"
     ];
 
     const compiler = Webpack(webpackConfig);
@@ -78,4 +91,8 @@ module.exports = () => {
     };
 
     runServer();
+}
+
+function formatPath(path) {
+    return path.replace('[', '').replace(']', '');
 }
