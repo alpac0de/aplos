@@ -1,10 +1,10 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 {components}
 import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
+    Routes,
+    BrowserRouter,
+    Route
 } from "react-router-dom";
 
 function NoMatch() {
@@ -12,16 +12,16 @@ function NoMatch() {
 }
 
 function App() {
-    return <Router>
-            <Switch>
-                {routes}
-
-                <Route path="*">
-                    <NoMatch />
+    return <BrowserRouter>
+            <Routes>
+                <Route element={<Layout />}>
+                    {routes}
+                    <Route path="*" element={ <NoMatch />} />
                 </Route>
-            </Switch>
-        </Router>
+            </Routes>
+        </BrowserRouter>
 }
 
-ReactDOM.render(<App />, document.getElementById('root'));
-
+const container = document.getElementById('root');
+const root = createRoot(container);
+root.render(<App />);

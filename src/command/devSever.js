@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const Webpack = require('webpack');
+const {build, getFiles} = require('../build');
 let aplos = {
     rewrites: () => []
 };
@@ -14,75 +15,8 @@ console.log(aplos);
 
 module.exports = () => {
     let projectDirectory = process.cwd();
-    const pageDirectory = projectDirectory + '/src/pages';
 
-    if (!fs.existsSync(projectDirectory + '/.aplos/')) {
-        fs.mkdirSync(projectDirectory + '/.aplos/');
-    }
-
-    const pages = [];
-    const capitalize = s => s && s[0].toUpperCase() + s.slice(1)
-
-    if (!fs.existsSync(pageDirectory)) {
-        console.log("No pages directory found");
-        return;
-    }
-
-    let filenames = getFiles(pageDirectory);
-    const routes = aplos.rewrites();
-
-    filenames.forEach(file => {
-
-        // if file start with _ ignore it
-        if (file.startsWith('/_')) {
-            return;
-        }
-
-        let name = file.replace(/\.(js|tsx|jsx)$/, '');
-        let nameParts = name.split('/');
-
-        let fileName = nameParts.pop();
-        let capitalizeName = (capitalize(nameParts[1]) + capitalize(fileName)).replace('undefined', '');
-        let path = capitalizeName === 'Index' ? '/':  name;
-
-        let found = routes.find(element => element.source === path);
-
-        if (found) {
-            path = found.destination
-        }
-
-        path = path.replace(/\[(.*?)]/g, ':$1');
-
-        pages.push({
-            "name": capitalizeName,
-            "path": path,
-            "component": capitalizeName,
-            "file": file.replaceAll('//', '/'),
-        })
-    });
-
-    let template = fs.readFileSync(__dirname + "/../../templates/root.jsx").toString();
-
-    let router = pages.map((route) => {
-        let pathName = formatPath(route.name);
-
-        return '<Route path="' + route.path + '"> <' + pathName + ' /> </Route>'+ "\n";
-    });
-
-    template = template.replace('{routes}', router.join(' '));
-
-    let components = pages.map((route) => {
-        let pathName = formatPath(route.name);
-        return 'import ' + pathName + ' from "' + projectDirectory + '/src/pages' + route.file + '"; ' + "\n";
-    })
-
-    template = template.replace('{components}', components.join(''));
-
-    if (!fs.existsSync(projectDirectory + '/.aplos/generated')) {
-        fs.mkdirSync(projectDirectory + '/.aplos/generated');
-    }
-
-    fs.writeFileSync(projectDirectory + '/.aplos/generated/app.js', template);
+    build(aplos);
 
     let runtime_dir = __dirname + "/..";
 
@@ -111,31 +45,5 @@ module.exports = () => {
     runServer();
 }
 
-function getFiles(dirPath) {
-    let files = fs.readdirSync(dirPath);
-    let filelist = [];
-    files.forEach(function (file) {
-        if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
-            filelist = filelist.concat(getFiles(path.join(dirPath, file)));
-        }
-        else {
-            let filePath = path.join(dirPath, file);
-            filePath = filePath.replace(process.cwd() + "/src/pages", ""); // Supprime le début du chemin
-            filelist.push(filePath);
-        }
-    });
-    return filelist;
-}
 
-function formatPath(path) {
-    return path
-        .replaceAll('[', '')
-        .replaceAll(']', '')
-        .replaceAll('_', '')
-        .replaceAll('-', '');
-}
 
-//module.exports = {
-//    getFiles,
-//    formatPath
-//};

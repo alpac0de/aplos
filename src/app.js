@@ -1,17 +1,16 @@
 import React from "react";
 import {
-    BrowserRouter as Router,
-    Switch,
+    BrowserRouter,
     Route,
-    Link
+    Routes
 } from "react-router-dom";
 
 export default function() {
-    return <Router>
-        <Switch>
+    return <BrowserRouter>
+        <Routes>
             <Route exact path="/">
                 <div>Coucou</div>
             </Route>
-        </Switch>
-    </Router>
+        </Routes>
+    </BrowserRouter>
 }
