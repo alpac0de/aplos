@@ -1,7 +1,9 @@
 const path = require("path");
 const fs = require("fs");
 const Webpack = require('webpack');
-const {build, getFiles} = require('../build');
+const {buildRouter} = require('../build/router');
+const chokidar = require('chokidar');
+
 let aplos = {
     rewrites: () => []
 };
@@ -15,8 +17,24 @@ console.log(aplos);
 
 module.exports = () => {
     let projectDirectory = process.cwd();
+    console.log(projectDirectory);
 
-    build(aplos);
+
+    const watcher = chokidar.watch(projectDirectory + '/src', {
+        ignored: /(^|[\/\\])\../, // ignore dotfiles
+        persistent: true
+    });
+
+    watcher.on('change', path => {
+        console.log(`File ${path} has been changed`);
+        buildRouter(aplos);
+    });
+
+    watcher.on('add', path => {
+        buildRouter(aplos);
+    });
+
+    buildRouter(aplos);
 
     let runtime_dir = __dirname + "/..";
 
@@ -24,7 +42,7 @@ module.exports = () => {
     const webpackConfig = require(runtime_dir + '/../webpack.config.js');
     webpackConfig.mode = 'development';
     webpackConfig.entry  = [
-        projectDirectory + "/.aplos/generated/app.js"
+        projectDirectory + "/.aplos/cache/app.js"
     ];
 
     const compiler = Webpack(webpackConfig);
@@ -42,7 +60,7 @@ module.exports = () => {
         await server.start();
     };
 
-    runServer();
+    runServer().catch(error => console.error(error));
 }
 
 

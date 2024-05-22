@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require('path');
 
-function build(aplos) {
+function buildRouter(aplos) {
     console.log('Building...');
 
     let projectDirectory = process.cwd();
@@ -45,7 +45,7 @@ function build(aplos) {
         })
     });
 
-    let template = fs.readFileSync(__dirname + "/../templates/root.jsx").toString();
+    let template = fs.readFileSync(__dirname + "/../../templates/root.jsx").toString();
 
     let router = pages.map((route) => {
         return '<Route path="' + route.path + '" element={<' + route.component + ' /> } /> '+ "\n";
@@ -108,7 +108,7 @@ function formatPath(path) {
 }
 
 module.exports = {
-    build,
+    buildRouter,
     getFiles,
     formatPath
 };

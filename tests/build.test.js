@@ -1,4 +1,4 @@
-const { getFiles, formatPath } = require('./../src/build.js'); // assuming the functions are exported from devServer.js
+const { getFiles, formatPath } = require('../src/build/router.js'); // assuming the functions are exported from devServer.js
 const fs = require('fs');
 
 jest.mock('fs');
