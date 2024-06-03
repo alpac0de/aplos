@@ -7,11 +7,6 @@ module.exports = {
         path: path.resolve(process.cwd(), "./public/dist"),
         publicPath: '/',
     },
-    resolve: {
-        alias: {
-            '@': path.resolve(__dirname, 'src/')
-        },
-    },
     module: {
         rules: [
             {

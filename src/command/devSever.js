@@ -9,11 +9,15 @@ let aplos = {
 };
 
 try {
-    aplos = require(process.cwd() + "/aplos.config.js");
+    let config = require(process.cwd() + "/aplos.config.js");
+    aplos = {...aplos, ...config};
 } catch (error) {
 }
 
 console.log(aplos);
+
+fs.writeFileSync(process.cwd() + '/.aplos/cache/config.js', 'module.exports = ' + JSON.stringify(aplos));
+
 
 module.exports = () => {
     let projectDirectory = process.cwd();
@@ -44,6 +48,11 @@ module.exports = () => {
     webpackConfig.entry  = [
         projectDirectory + "/.aplos/cache/app.js"
     ];
+
+    webpackConfig.resolve.alias = {
+        '@': projectDirectory + '/src/',
+        '@config': projectDirectory + '/.aplos/cache/config.js'
+    };
 
     const compiler = Webpack(webpackConfig);
     const devServerOptions = {
