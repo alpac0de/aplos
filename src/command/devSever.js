@@ -14,15 +14,10 @@ try {
 } catch (error) {
 }
 
-console.log(aplos);
-
 fs.writeFileSync(process.cwd() + '/.aplos/cache/config.js', 'module.exports = ' + JSON.stringify(aplos));
-
 
 module.exports = () => {
     let projectDirectory = process.cwd();
-    console.log(projectDirectory);
-
 
     const watcher = chokidar.watch(projectDirectory + '/src', {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
@@ -49,9 +44,11 @@ module.exports = () => {
         projectDirectory + "/.aplos/cache/app.js"
     ];
 
-    webpackConfig.resolve.alias = {
-        '@': projectDirectory + '/src/',
-        '@config': projectDirectory + '/.aplos/cache/config.js'
+    webpackConfig.resolve = {
+        alias: {
+            '@': projectDirectory + '/src/',
+            '@config': projectDirectory + '/.aplos/cache/config.js'
+        }
     };
 
     const compiler = Webpack(webpackConfig);
@@ -71,6 +68,3 @@ module.exports = () => {
 
     runServer().catch(error => console.error(error));
 }
-
-
-

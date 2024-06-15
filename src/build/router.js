@@ -8,7 +8,7 @@ function buildRouter(aplos) {
     const pageDirectory = projectDirectory + '/src/pages';
 
     if (!fs.existsSync(projectDirectory + '/.aplos/cache')) {
-        fs.mkdirSync(projectDirectory + '/.aplos/cache', { recursive: true });
+        fs.mkdirSync(projectDirectory + '/.aplos/cache', {recursive: true});
     }
 
     const pages = [];
@@ -16,6 +16,7 @@ function buildRouter(aplos) {
 
     if (!fs.existsSync(pageDirectory)) {
         console.log("No pages directory found");
+        process.exit(0);
         return;
     }
 
@@ -29,7 +30,7 @@ function buildRouter(aplos) {
         let fileName = nameParts.pop();
         let part = nameParts[1] || '';
         let capitalizeName = capitalize(formatPath(part)) + capitalize(formatPath(fileName));
-        let path = capitalizeName === 'Index' ? '/':  name;
+        let path = capitalizeName === 'Index' ? '/' : name;
         let found = routes.find(element => element.source === path);
 
         if (found) {
@@ -48,7 +49,7 @@ function buildRouter(aplos) {
     let template = fs.readFileSync(__dirname + "/../../templates/root.jsx").toString();
 
     let router = pages.map((route) => {
-        return '<Route path="' + route.path + '" element={<' + route.component + ' /> } /> '+ "\n";
+        return '<Route path="' + route.path + '" element={<' + route.component + ' /> } /> ' + "\n";
     });
 
     template = template.replace('{routes}', router.join(' '));
@@ -57,7 +58,7 @@ function buildRouter(aplos) {
         return 'import ' + route.component + ' from "' + projectDirectory + '/src/pages' + route.file + '"; ' + "\n";
     })
 
-    if(fs.existsSync(pageDirectory + '/_layout.tsx')) {
+    if (fs.existsSync(pageDirectory + '/_layout.tsx')) {
         components.push('import Layout from "' + projectDirectory + '/src/pages/_layout.tsx"; ' + "\n")
     } else {
         components.push('import Layout from "aplos/layout"; ' + "\n")
@@ -84,8 +85,7 @@ function getFiles(dirPath) {
 
         if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
             fileList = fileList.concat(getFiles(path.join(dirPath, file)));
-        }
-        else {
+        } else {
             let filePath = path.join(dirPath, file);
             filePath = filePath.replace(process.cwd() + "/src/pages", "");
             fileList.push(filePath);

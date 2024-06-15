@@ -1,9 +1,12 @@
-const { getFiles, formatPath } = require('../src/build/router.js'); // assuming the functions are exported from devServer.js
+const { getFiles, formatPath } = require('../../src/build/router.js');
 const fs = require('fs');
 
-jest.mock('fs');
 
 describe('getFiles', () => {
+
+    jest.mock('fs');
+
+
     it('should return all files in a directory', () => {
         fs.readdirSync.mockReturnValue(['file1.js', 'file2.js']);
         fs.statSync.mockReturnValue({ isDirectory: () => false });

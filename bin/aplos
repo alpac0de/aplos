@@ -6,8 +6,8 @@ const build = require('../src/command/build');
 
 const program = new Command();
 program
-    .name('Ruru')
-    .description('Another React Framework')
+    .name('Aplos')
+    .description('React Framework')
     .version('0.0.1');
 
 program.command('server')
