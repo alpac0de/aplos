@@ -24,7 +24,7 @@ function buildRouter(aplos) {
     const routes = aplos.rewrites();
 
     filenames.forEach(file => {
-        let name = file.replace(/\.(js|tsx|jsx)$/, '');
+        let name = file.replace('~', '').replace(/\.(js|tsx|jsx)$/, '');
         let nameParts = name.split('/');
 
         let fileName = nameParts.pop();
@@ -39,11 +39,14 @@ function buildRouter(aplos) {
 
         path = path.replace(/\[(.*?)]/g, ':$1');
 
-        pages.push({
-            "path": path,
-            "component": capitalizeName,
-            "file": file.replaceAll('//', '/'),
-        })
+        let existingPage = pages.find(p => p.path === path);
+        if (!existingPage) {
+            pages.push({
+                "path": path,
+                "component": capitalizeName,
+                "file": file.replaceAll('//', '/'),
+            })
+        }
     });
 
     let template = fs.readFileSync(__dirname + "/../../templates/root.jsx").toString();
