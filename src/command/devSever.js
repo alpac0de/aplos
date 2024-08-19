@@ -14,7 +14,17 @@ try {
 } catch (error) {
 }
 
-fs.writeFileSync(process.cwd() + '/.aplos/cache/config.js', 'module.exports = ' + JSON.stringify(aplos));
+const cacheDirectory = process.cwd() + '/.aplos/cache';
+
+try {
+    if (!fs.existsSync(cacheDirectory)) {
+        fs.mkdirSync(cacheDirectory, {recursive: true});
+    }
+} catch (err) {
+    console.error(err);
+}
+
+fs.writeFileSync(cacheDirectory + '/config.js', 'module.exports = ' + JSON.stringify(aplos));
 
 module.exports = () => {
     let projectDirectory = process.cwd();
