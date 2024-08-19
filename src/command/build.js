@@ -4,7 +4,7 @@ const {buildRouter} = require("../build/router");
 module.exports = (options) => {
     let projectDirectory = process.cwd();
     let runtime_dir = __dirname + "/..";
-    let node_modules = __dirname + "/../../node_modules";
+    let node_modules = projectDirectory + "/node_modules";
 
     buildRouter({
         rewrites: () => []
