@@ -7,10 +7,6 @@ function buildRouter(aplos) {
     let projectDirectory = process.cwd();
     const pageDirectory = projectDirectory + '/src/pages';
 
-    if (!fs.existsSync(projectDirectory + '/.aplos/cache')) {
-        fs.mkdirSync(projectDirectory + '/.aplos/cache', {recursive: true});
-    }
-
     const pages = [];
     const capitalize = s => s && s[0].toUpperCase() + s.slice(1)
 
@@ -66,6 +62,18 @@ function buildRouter(aplos) {
     } else {
         components.push('import Layout from "aplos/layout"; ' + "\n")
     }
+
+    if (aplos.reactStrictMode) {
+        components.push('import { StrictMode } from "react"; ' + "\n");
+        template = template.replace('{strictMode}', '<StrictMode>');
+        template = template.replace('{/strictMode}', '</StrictMode>');
+    } else {
+        template = template.replace('{strictMode}', '');
+        template = template.replace('{/strictMode}', '');
+    }
+
+    template = template.replace('{components}', components.join(''));
+
 
     template = template.replace('{components}', components.join(''));
 

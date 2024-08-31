@@ -2,6 +2,8 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
+const projectDirectory = process.cwd();
+
 module.exports = {
     output: {
         path: path.resolve(process.cwd(), "./public/dist"),
@@ -24,7 +26,15 @@ module.exports = {
                 test: /\.css$/,
                 use: [MiniCssExtractPlugin.loader, 'css-loader'],
             },
-        ]
+        ],
+    },
+    resolve: {
+        alias: {
+            'aplos/layout': path.resolve(__dirname, 'src/components/layout.tsx'),
+            'aplos/config': path.resolve(__dirname, 'src/components/config.js'),
+            '@': projectDirectory + '/src/',
+            '@config': projectDirectory + '/.aplos/cache/config.js'
+        }
     },
     plugins: [
         new HtmlWebpackPlugin({

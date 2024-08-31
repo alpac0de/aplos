@@ -5,6 +5,7 @@
         ],
         "module": "ES2022",
         "moduleResolution": "node",
-        "target": "es2022"
+        "target": "es2022",
+        "jsx": "react"
     }
 }

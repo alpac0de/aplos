@@ -3,28 +3,13 @@ const fs = require("fs");
 const Webpack = require('webpack');
 const {buildRouter} = require('../build/router');
 const chokidar = require('chokidar');
+const get_config = require('../build/config');
 
-let aplos = {
-    rewrites: () => []
-};
-
-try {
-    let config = require(process.cwd() + "/aplos.config.js");
-    aplos = {...aplos, ...config};
-} catch (error) {
-}
+let config = get_config(process.cwd());
 
 const cacheDirectory = process.cwd() + '/.aplos/cache';
 
-try {
-    if (!fs.existsSync(cacheDirectory)) {
-        fs.mkdirSync(cacheDirectory, {recursive: true});
-    }
-} catch (err) {
-    console.error(err);
-}
-
-fs.writeFileSync(cacheDirectory + '/config.js', 'module.exports = ' + JSON.stringify(aplos));
+fs.writeFileSync(cacheDirectory + '/config.js', 'module.exports = ' + JSON.stringify(config));
 
 module.exports = () => {
     let projectDirectory = process.cwd();
@@ -36,14 +21,14 @@ module.exports = () => {
 
     watcher.on('change', path => {
         console.log(`File ${path} has been changed`);
-        buildRouter(aplos);
+        buildRouter(config);
     });
 
     watcher.on('add', path => {
-        buildRouter(aplos);
+        buildRouter(config);
     });
 
-    buildRouter(aplos);
+    buildRouter(config);
 
     let runtime_dir = __dirname + "/..";
 
@@ -53,13 +38,6 @@ module.exports = () => {
     webpackConfig.entry  = [
         projectDirectory + "/.aplos/cache/app.js"
     ];
-
-    webpackConfig.resolve = {
-        alias: {
-            '@': projectDirectory + '/src/',
-            '@config': projectDirectory + '/.aplos/cache/config.js'
-        }
-    };
 
     const compiler = Webpack(webpackConfig);
     const devServerOptions = {
