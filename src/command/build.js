@@ -1,6 +1,6 @@
 const {exec} = require("child_process");
 const {buildRouter} = require("../build/router");
-const {get_config} = require('../build/config');
+const get_config = require('../build/config');
 
 module.exports = (options) => {
     let projectDirectory = process.cwd();
