@@ -33,6 +33,10 @@ module.exports = () => {
         }
     });
 
+    watcher.on('unlink', path => {
+        buildRouter(config);
+    });
+
     buildRouter(config);
 
     let runtime_dir = __dirname + "/..";
