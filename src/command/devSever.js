@@ -24,8 +24,13 @@ module.exports = () => {
         buildRouter(config);
     });
 
+    const changedFiles = [];
     watcher.on('add', path => {
-        buildRouter(config);
+        changedFiles.push(path);
+
+        if (!changedFiles.includes(path)) {
+            buildRouter(config);
+        }
     });
 
     buildRouter(config);
