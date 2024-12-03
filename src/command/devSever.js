@@ -21,20 +21,11 @@ module.exports = () => {
 
     watcher.on('change', path => {
         console.log(`File ${path} has been changed`);
-        buildRouter(config);
+        //buildRouter(config);
     });
 
-    const changedFiles = [];
     watcher.on('add', path => {
-        changedFiles.push(path);
-
-        if (!changedFiles.includes(path)) {
-            buildRouter(config);
-        }
-    });
-
-    watcher.on('unlink', path => {
-        buildRouter(config);
+        //buildRouter(config);
     });
 
     buildRouter(config);

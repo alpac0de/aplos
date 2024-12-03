@@ -3,6 +3,7 @@
 const { Command } = require('commander');
 const devServer = require('../src/command/devSever');
 const build = require('../src/command/build');
+const router = require('../src/command/router');
 
 const program = new Command();
 program
@@ -18,5 +19,9 @@ program.command('build')
     .description('Build assets')
     .option('mode', 'Providing the mode configuration option tells webpack to use its built-in optimizations accordingly', 'development')
     .action(build);
+
+program.command('router:debug')
+    .description('Debug the router')
+    .action(router);
 
 program.parse();

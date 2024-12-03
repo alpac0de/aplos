@@ -10,7 +10,7 @@
     "aplos": "bin/aplos"
   },
   "scripts": {
-    "dev": "bin/aplos dev",
+    "dev": "bin/aplos server",
     "test": "jest"
   },
   "dependencies": {
@@ -30,7 +30,8 @@
     "webpack": "^5.94.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.0.4",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "cli-table3": "^0.6.0"
   },
   "devDependencies": {
     "babel-jest": "^29.7.0",
@@ -41,5 +42,6 @@
   "exports": {
     "./layout": "./src/components/layout.tsx",
     "./config": "./src/components/config"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

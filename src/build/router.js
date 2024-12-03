@@ -5,7 +5,7 @@ function buildRouter(aplos) {
     console.log('Building...');
 
     let projectDirectory = process.cwd();
-    const pageDirectory = projectDirectory + '/src/pages';
+    const pageDirectory = path.join(projectDirectory, 'src', 'pages');
 
     const pages = [];
     const capitalize = s => s && s[0].toUpperCase() + s.slice(1)
@@ -16,7 +16,7 @@ function buildRouter(aplos) {
         return;
     }
 
-    let filenames = getFiles(pageDirectory);
+    const filenames = getFiles(pageDirectory);
     const routes = aplos.rewrites();
 
     filenames.forEach(file => {
@@ -37,11 +37,14 @@ function buildRouter(aplos) {
 
         let existingPage = pages.find(p => p.path === path);
         if (!existingPage) {
-            pages.push({
+            const config = {
                 "path": path,
                 "component": capitalizeName,
                 "file": file.replaceAll('//', '/'),
-            })
+            };
+
+            routes.push(config);
+            pages.push(config);
         }
     });
 
@@ -74,9 +77,7 @@ function buildRouter(aplos) {
 
     template = template.replace('{components}', components.join(''));
 
-
-    template = template.replace('{components}', components.join(''));
-
+    fs.writeFileSync(projectDirectory + '/.aplos/cache/router.js', JSON.stringify(routes));
     fs.writeFileSync(projectDirectory + '/.aplos/cache/app.js', template);
 }
 
