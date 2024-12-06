@@ -13,6 +13,10 @@ module.exports = (projectDirectory) => {
     }
 
     let aplos = {
+        server: {
+            port: process.env.APLOS_SERVER_PORT || 3000,
+        },
+        routes: {},
         rewrites: () => []
     };
 

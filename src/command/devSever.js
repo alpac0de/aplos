@@ -40,7 +40,6 @@ module.exports = () => {
         buildRouter(config);
     });
 
-
     let runtime_dir = __dirname + "/..";
 
     const WebpackDevServer = require('webpack-dev-server');
@@ -53,6 +52,7 @@ module.exports = () => {
     const compiler = Webpack(webpackConfig);
     const devServerOptions = {
         open: false,
+        port: config.server.port,
         historyApiFallback: true,
         static: {
             directory: path.join(__dirname+ '/../client/', 'public'),
