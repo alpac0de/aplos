@@ -32,7 +32,8 @@ module.exports = {
         alias: {
             'aplos/layout': path.resolve(__dirname, 'src/components/layout.tsx'),
             'aplos/config': path.resolve(__dirname, 'src/components/config.js'),
-            '@': projectDirectory + '/src/',
+            '@': projectDirectory + '/src',
+            '~': projectDirectory + '/src',
             '@config': projectDirectory + '/.aplos/cache/config.js'
         }
     },
