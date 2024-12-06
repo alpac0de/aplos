@@ -21,6 +21,7 @@ program.command('build')
     .action(build);
 
 program.command('router:debug')
+    .argument('[name]', 'Name of the route')
     .description('Debug the router')
     .action(router);
 

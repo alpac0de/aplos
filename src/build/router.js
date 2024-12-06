@@ -41,6 +41,7 @@ function buildRouter(aplos) {
                 "path": path,
                 "component": capitalizeName,
                 "file": file.replaceAll('//', '/'),
+                "requirement": {}
             };
 
             routes.push(config);
