@@ -13,6 +13,8 @@ fs.writeFileSync(cacheDirectory + '/config.js', 'module.exports = ' + JSON.strin
 
 module.exports = () => {
     let projectDirectory = process.cwd();
+    let firstBuild = true;
+    buildRouter(config);
 
     const watcher = chokidar.watch(projectDirectory + '/src', {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
@@ -26,17 +28,18 @@ module.exports = () => {
 
     const changedFiles = [];
     watcher.on('add', path => {
-        if (!changedFiles.includes(path)) {
+        if (firstBuild && !changedFiles.includes(path)) {
             buildRouter(config);
             changedFiles.push(path);
         }
+
+        firstBuild = false;
     });
 
     watcher.on('unlink', path => {
         buildRouter(config);
     });
 
-    buildRouter(config);
 
     let runtime_dir = __dirname + "/..";
 
