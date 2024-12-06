@@ -90,7 +90,7 @@ module.exports = {
 
 ### Server Configuration
 Development server port can be configured in order of priority:
-1. Environment variable: `PORT=4000`
+1. Environment variable: `APLOS_SERVER_PORT=4000`
 2. Configuration in aplos.config.js: `server: { port: 4000 }`
 3. Default value: 3000
 
