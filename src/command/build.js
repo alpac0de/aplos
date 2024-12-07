@@ -1,8 +1,8 @@
-const {exec} = require("child_process");
-const {buildRouter} = require("../build/router");
-const get_config = require('../build/config');
+import {exec} from "child_process";
+import {buildRouter}  from "../build/router";
+import get_config from '../build/config';
 
-module.exports = (options) => {
+export default (options) => {
     let projectDirectory = process.cwd();
     let runtime_dir = __dirname + "/..";
     let node_modules = projectDirectory + "/node_modules";

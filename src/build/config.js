@@ -1,8 +1,7 @@
-const fs = require("fs");
+import fs from "fs";
 
-module.exports = (projectDirectory) => {
-
-    const cacheDirectory = process.cwd() + '/.aplos/cache';
+export default () => {
+    const cacheDirectory = process.cwd() + "/.aplos/cache";
 
     try {
         if (!fs.existsSync(cacheDirectory)) {
@@ -16,8 +15,7 @@ module.exports = (projectDirectory) => {
         server: {
             port: process.env.APLOS_SERVER_PORT || 3000,
         },
-        routes: {},
-        rewrites: () => []
+        routes: [],
     };
 
     try {
@@ -27,4 +25,4 @@ module.exports = (projectDirectory) => {
     }
 
     return aplos;
-}
+};

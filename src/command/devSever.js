@@ -1,33 +1,37 @@
-const path = require("path");
-const fs = require("fs");
-const Webpack = require('webpack');
-const {buildRouter} = require('../build/router');
-const chokidar = require('chokidar');
-const get_config = require('../build/config');
+import path from "path";
+import fs from "fs";
+import Webpack from "webpack";
+import {buildRouter} from "../build/router";
+import chokidar from "chokidar";
+import get_config from "../build/config";
+import WebpackDevServer from "webpack-dev-server";
 
 let config = get_config(process.cwd());
 
-const cacheDirectory = process.cwd() + '/.aplos/cache';
+const cacheDirectory = process.cwd() + "/.aplos/cache";
 
-fs.writeFileSync(cacheDirectory + '/config.js', 'module.exports = ' + JSON.stringify(config));
+fs.writeFileSync(
+    cacheDirectory + "/config.js",
+    "module.exports = " + JSON.stringify(config),
+);
 
-module.exports = () => {
+export default () => {
     let projectDirectory = process.cwd();
     let firstBuild = true;
     buildRouter(config);
 
-    const watcher = chokidar.watch(projectDirectory + '/src', {
+    const watcher = chokidar.watch(projectDirectory + "/src", {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
-        persistent: true
+        persistent: true,
     });
 
-    watcher.on('change', path => {
+    watcher.on("change", (path) => {
         console.log(`File ${path} has been changed`);
         buildRouter(config);
     });
 
     const changedFiles = [];
-    watcher.on('add', path => {
+    watcher.on("add", (path) => {
         if (firstBuild && !changedFiles.includes(path)) {
             buildRouter(config);
             changedFiles.push(path);
@@ -36,18 +40,15 @@ module.exports = () => {
         firstBuild = false;
     });
 
-    watcher.on('unlink', path => {
+    watcher.on("unlink", (path) => {
         buildRouter(config);
     });
 
     let runtime_dir = __dirname + "/..";
 
-    const WebpackDevServer = require('webpack-dev-server');
-    const webpackConfig = require(runtime_dir + '/../webpack.config.js');
-    webpackConfig.mode = 'development';
-    webpackConfig.entry  = [
-        projectDirectory + "/.aplos/cache/app.js"
-    ];
+    const webpackConfig = require(runtime_dir + "/../webpack.config.js");
+    webpackConfig.mode = "development";
+    webpackConfig.entry = [projectDirectory + "/.aplos/cache/app.js"];
 
     const compiler = Webpack(webpackConfig);
     const devServerOptions = {
@@ -55,15 +56,15 @@ module.exports = () => {
         port: config.server.port,
         historyApiFallback: true,
         static: {
-            directory: path.join(__dirname+ '/../client/', 'public'),
-        }
+            directory: path.join(__dirname + "/../client/", "public"),
+        },
     };
     const server = new WebpackDevServer(devServerOptions, compiler);
 
     const runServer = async () => {
-        console.log('Starting server...');
+        console.log("Starting server...");
         await server.start();
     };
 
-    runServer().catch(error => console.error(error));
-}
+    runServer().catch((error) => console.error(error));
+};

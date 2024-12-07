@@ -1,7 +1,7 @@
-const fs = require("fs");
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-function buildRouter(aplos) {
+export function buildRouter(aplos) {
     console.log('Building...');
 
     let projectDirectory = process.cwd();
@@ -17,7 +17,7 @@ function buildRouter(aplos) {
     }
 
     const filenames = getFiles(pageDirectory);
-    const routes = aplos.rewrites();
+    const routes = aplos.routes || [];
 
     filenames.forEach(file => {
         let name = file.replace('~', '').replace(/\.(js|tsx|jsx)$/, '');
@@ -87,8 +87,7 @@ function buildRouter(aplos) {
  * @param {string} dirPath
  * @returns {*[]}
  */
-
-function getFiles(dirPath) {
+export function getFiles(dirPath) {
     let files = fs.readdirSync(dirPath);
     let fileList = [];
     files.forEach(function (file) {
@@ -112,16 +111,10 @@ function getFiles(dirPath) {
  * @param {string} path
  * @returns {string}
  */
-function formatPath(path) {
+export function formatPath(path) {
     return path
         .replaceAll('[', '')
         .replaceAll(']', '')
         .replaceAll('_', '')
         .replaceAll('-', '');
 }
-
-module.exports = {
-    buildRouter,
-    getFiles,
-    formatPath
-};

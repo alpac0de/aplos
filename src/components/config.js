@@ -1,5 +1,5 @@
-import Config from '@config';
+import Config from "@config";
 
 export default function getConfig() {
-    return Config;
+  return Config;
 }

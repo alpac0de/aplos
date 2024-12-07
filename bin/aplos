@@ -1,28 +1,32 @@
 #!/usr/bin/env node
 
-const { Command } = require('commander');
-const devServer = require('../src/command/devSever');
-const build = require('../src/command/build');
-const router = require('../src/command/router');
+import { Command } from "commander";
+import devServer from "../src/command/devSever";
+import build from "../src/command/build";
+import router from "../src/command/router";
 
 const program = new Command();
+program.name("Aplos").description("React Framework").version("0.0.1");
+
 program
-    .name('Aplos')
-    .description('React Framework')
-    .version('0.0.1');
+  .command("server")
+  .description("Split a string into substrings and display as an array")
+  .action(devServer);
 
-program.command('server')
-    .description('Split a string into substrings and display as an array')
-    .action(devServer);
+program
+  .command("build")
+  .description("Build assets")
+  .option(
+    "mode",
+    "Providing the mode configuration option tells webpack to use its built-in optimizations accordingly",
+    "development",
+  )
+  .action(build);
 
-program.command('build')
-    .description('Build assets')
-    .option('mode', 'Providing the mode configuration option tells webpack to use its built-in optimizations accordingly', 'development')
-    .action(build);
-
-program.command('router:debug')
-    .argument('[name]', 'Name of the route')
-    .description('Debug the router')
-    .action(router);
+program
+  .command("router:debug")
+  .argument("[name]", "Name of the route")
+  .description("Debug the router")
+  .action(router);
 
 program.parse();
