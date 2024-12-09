@@ -40,6 +40,7 @@
   },
   "exports": {
     "./layout": "./src/components/layout.tsx",
-    "./config": "./src/components/config"
+    "./config": "./src/components/config",
+    "./navigation": "./src/components/navigation"
   }
 }
