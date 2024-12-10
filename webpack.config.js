@@ -40,6 +40,7 @@ module.exports = {
             "~": projectDirectory + "/src",
             "@config": projectDirectory + "/.aplos/cache/config.js",
         },
+        extensions: ['.ts', '.tsx', '.js', '.jsx']
     },
     plugins: [
         new HtmlWebpackPlugin({
