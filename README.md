@@ -8,6 +8,12 @@ This framework uses automatic routing based on the file structure in the `src/pa
 
 Files with extensions `.tsx`, `.jsx`, `.ts`, and `.js` in `src/pages` automatically define your application's routes.
 
+### Installation
+
+```bash
+npm install https://github.com/alpac0de/aplos.git
+```
+
 ### Route Examples
 
 #### Static Pages
