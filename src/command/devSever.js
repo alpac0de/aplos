@@ -40,7 +40,7 @@ export default () => {
         firstBuild = false;
     });
 
-    watcher.on("unlink", (path) => {
+    watcher.on("unlink", () => {
         buildRouter(config);
     });
 

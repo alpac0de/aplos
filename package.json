@@ -10,7 +10,8 @@
   },
   "scripts": {
     "dev": "bin/aplos server",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint"
   },
   "dependencies": {
     "@babel/core": "^7.26.0",
@@ -33,7 +34,11 @@
     "cli-table3": "^0.6.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.16.0",
     "babel-jest": "^29.7.0",
+    "eslint": "^9.16.0",
+    "eslint-plugin-react": "^7.37.2",
+    "globals": "^15.13.0",
     "jest": "^29.7.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

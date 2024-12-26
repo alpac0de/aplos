@@ -22,6 +22,7 @@ export default () => {
         let config = require(process.cwd() + "/aplos.config.js");
         aplos = {...aplos, ...config};
     } catch (error) {
+        console.error(error);
     }
 
     return aplos;
