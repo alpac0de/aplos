@@ -58,7 +58,9 @@ export function buildRouter(aplos) {
     template = template.replace('{routes}', router.join(' '));
 
     let components = pages.map((route) => {
-        return 'import ' + route.component + ' from "' + projectDirectory + '/src/pages' + route.file + '"; ' + "\n";
+        const componentFileName = route.file.replace('~', '');
+
+        return 'import ' + route.component + ' from "' + projectDirectory + '/src/pages' + componentFileName + '"; ' + "\n";
     })
 
     if (fs.existsSync(pageDirectory + '/_layout.tsx')) {
