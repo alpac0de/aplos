@@ -37,6 +37,7 @@ module.exports = {
             "aplos/layout": path.resolve(__dirname, "src/components/layout.tsx"),
             "aplos/config": path.resolve(__dirname, "src/components/config.js"),
             "aplos/navigation": path.resolve(__dirname, "src/components/navigation.jsx"),
+            "aplos/head": path.resolve(__dirname, "src/components/head.jsx"),
             "@": projectDirectory + "/src",
             "~": projectDirectory + "/src",
             "@config": projectDirectory + "/.aplos/cache/config.js",
