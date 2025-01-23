@@ -1,6 +1,7 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 const projectDirectory = process.cwd();
 
@@ -17,7 +18,10 @@ module.exports = {
                 use: {
                     loader: "babel-loader",
                     options: {
-                        plugins: [["@babel/plugin-proposal-decorators", {legacy: true}]],
+                        plugins: [
+                            ["@babel/plugin-proposal-decorators", {legacy: true}],
+                            "react-refresh/babel"
+                        ],
                         presets: [
                             "@babel/preset-env",
                             "@babel/preset-react",
@@ -49,5 +53,6 @@ module.exports = {
             template: path.resolve(__dirname, "./src/client/public/index.html"),
         }),
         new MiniCssExtractPlugin(),
+        new ReactRefreshWebpackPlugin(),
     ],
 };
