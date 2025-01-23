@@ -52,6 +52,7 @@ export default () => {
 
     const compiler = Webpack(webpackConfig);
     const devServerOptions = {
+        hot: true,
         open: false,
         port: config.server.port,
         historyApiFallback: true,

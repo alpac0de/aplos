@@ -19,7 +19,7 @@ program
   .option(
     "mode",
     "Providing the mode configuration option tells webpack to use its built-in optimizations accordingly",
-    "development",
+    process.env.NODE_ENV || "development"
   )
   .action(build);
 
