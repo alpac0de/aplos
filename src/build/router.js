@@ -19,13 +19,31 @@ export function buildRouter(aplos) {
     const filenames = getFiles(pageDirectory);
     const routes = aplos.routes || [];
 
+    const generateComponentName = (nameParts, fileName) => {
+        const parts = nameParts.filter(part => part && part !== fileName);
+
+        const processedParts = parts.map(part => {
+            if (part.startsWith('[')) {
+                const parentDir = parts[parts.indexOf(part) - 1];
+                return parentDir ?
+                    capitalize(formatPath(parentDir)) + capitalize(formatPath(part)) :
+                    capitalize(formatPath(part));
+            }
+            return capitalize(formatPath(part));
+        });
+
+        processedParts.push(capitalize(formatPath(fileName)));
+
+        return processedParts.join('');
+    }
+
     filenames.forEach(file => {
         let name = file.replace('~', '').replace(/\.(js|tsx|jsx)$/, '');
         let nameParts = name.split('/');
 
         let fileName = nameParts.pop();
         let part = nameParts[1] || '';
-        let capitalizeName = capitalize(formatPath(part)) + capitalize(formatPath(fileName));
+        let capitalizeName = generateComponentName(nameParts, fileName);
         let path = capitalizeName === 'Index' ? '/' : name;
         let found = routes.find(element => element.source === path);
 
