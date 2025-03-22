@@ -3,6 +3,7 @@ import path from 'path';
 
 export function buildRouter(aplos) {
     console.info('Building...');
+    const appExtensions = ['.tsx', '.jsx', '.js'];
 
     let projectDirectory = process.cwd();
     const pageDirectory = path.join(projectDirectory, 'src', 'pages');
@@ -16,7 +17,7 @@ export function buildRouter(aplos) {
         return;
     }
 
-    const filenames = getFiles(pageDirectory, ['.tsx', '.js', '.jsx']);
+    const filenames = getFiles(pageDirectory, appExtensions);
     const routes = aplos.routes || [];
 
     const generateComponentName = (nameParts, fileName) => {
@@ -68,8 +69,8 @@ export function buildRouter(aplos) {
 
     let template = fs.readFileSync(__dirname + "/../../templates/root.jsx").toString();
 
-    let router = pages.map((route) => {
-        return '<Route path="' + route.path + '" element={<' + route.component + ' /> } /> ' + "\n";
+    let router = pages.map(route => {
+        return `<Route path="${route.path}" element={<${route.component} />} />\n`;
     });
 
     template = template.replace('{routes}', router.join(' '));
@@ -77,11 +78,10 @@ export function buildRouter(aplos) {
     let components = pages.map((route) => {
         const componentFileName = route.file.replace('~', '');
 
-        return 'import ' + route.component + ' from "' + projectDirectory + '/src/pages' + componentFileName + '"; ' + "\n";
+        return `import ${route.component} from "${projectDirectory}/src/pages${componentFileName}";\n`;
     })
 
     const appFileName = '_app';
-    const appExtensions = ['.tsx', '.jsx', '.js'];
     const appFile = appExtensions
         .map(ext => `${appFileName}${ext}`)
         .find(file => fs.existsSync(path.join(pageDirectory, file)));
@@ -107,8 +107,8 @@ export function buildRouter(aplos) {
 
     template = template.replace('{components}', components.join(''));
 
-    fs.writeFileSync(projectDirectory + '/.aplos/cache/router.js', JSON.stringify(routes));
-    fs.writeFileSync(projectDirectory + '/.aplos/cache/app.js', template);
+    fs.writeFileSync(path.join(projectDirectory, '.aplos', 'cache', 'router.js'), JSON.stringify(routes));
+    fs.writeFileSync(path.join(projectDirectory, '.aplos', 'cache', 'app.js'), template);
 }
 
 /**
@@ -117,7 +117,7 @@ export function buildRouter(aplos) {
  * @param {string[]} extensions
  * @returns {*[]}
  */
-export function getFiles(dirPath, extensions = ['.tsx', '.js', '.jsx']) {
+export function getFiles(dirPath, extensions) {
     let files = fs.readdirSync(dirPath);
     let fileList = [];
     files.forEach(function (file) {
