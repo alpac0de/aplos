@@ -84,7 +84,11 @@ export function buildRouter(aplos) {
     if (fs.existsSync(pageDirectory + '/_layout.tsx')) {
         components.push('import Layout from "' + projectDirectory + '/src/pages/_layout.tsx"; ' + "\n")
     } else {
-        components.push('import Layout from "aplos/layout"; ' + "\n")
+        components.push('import { Outlet } from "react-router-dom";')
+        components.push(`
+        const Layout = () => {
+            return <Outlet />;
+        };\n`);
     }
 
     if (aplos.reactStrictMode) {
