@@ -17,7 +17,7 @@ program
   .command("build")
   .description("Build assets")
   .option(
-    "mode",
+    "--mode",
     "Providing the mode configuration option tells webpack to use its built-in optimizations accordingly",
     process.env.NODE_ENV || "development"
   )
