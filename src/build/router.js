@@ -80,14 +80,14 @@ export function buildRouter(aplos) {
         return 'import ' + route.component + ' from "' + projectDirectory + '/src/pages' + componentFileName + '"; ' + "\n";
     })
 
-    const supportedLayouts = ['_layout'];
-    const layoutFile = supportedLayouts
-        .map(name => ['.tsx', '.jsx', '.js'].map(ext => `${name}${ext}`))
-        .flat()
+    const appFileName = '_app';
+    const appExtensions = ['.tsx', '.jsx', '.js'];
+    const appFile = appExtensions
+        .map(ext => `${appFileName}${ext}`)
         .find(file => fs.existsSync(path.join(pageDirectory, file)));
 
-    if (layoutFile) {
-        components.push(`import Layout from "${projectDirectory}/src/pages/${layoutFile}";\n`);
+    if (appFile) {
+        components.push(`import Layout from "${projectDirectory}/src/pages/${appFile}";\n`);
     } else {
         components.push('import { Outlet } from "react-router-dom";')
         components.push(`
