@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 export function buildRouter(aplos) {
-    console.log('Building...');
+    console.info('Building...');
 
     let projectDirectory = process.cwd();
     const pageDirectory = path.join(projectDirectory, 'src', 'pages');
@@ -11,12 +11,12 @@ export function buildRouter(aplos) {
     const capitalize = s => s && s[0].toUpperCase() + s.slice(1)
 
     if (!fs.existsSync(pageDirectory)) {
-        console.log("No pages directory found");
+        console.warn("No pages directory found");
         process.exit(0);
         return;
     }
 
-    const filenames = getFiles(pageDirectory);
+    const filenames = getFiles(pageDirectory, ['.tsx', '.js', '.jsx']);
     const routes = aplos.routes || [];
 
     const generateComponentName = (nameParts, fileName) => {
@@ -42,7 +42,6 @@ export function buildRouter(aplos) {
         let nameParts = name.split('/');
 
         let fileName = nameParts.pop();
-        let part = nameParts[1] || '';
         let capitalizeName = generateComponentName(nameParts, fileName);
         let path = capitalizeName === 'Index' ? '/' : name;
         let found = routes.find(element => element.source === path);
@@ -81,8 +80,14 @@ export function buildRouter(aplos) {
         return 'import ' + route.component + ' from "' + projectDirectory + '/src/pages' + componentFileName + '"; ' + "\n";
     })
 
-    if (fs.existsSync(pageDirectory + '/_layout.tsx')) {
-        components.push('import Layout from "' + projectDirectory + '/src/pages/_layout.tsx"; ' + "\n")
+    const supportedLayouts = ['_layout'];
+    const layoutFile = supportedLayouts
+        .map(name => ['.tsx', '.jsx', '.js'].map(ext => `${name}${ext}`))
+        .flat()
+        .find(file => fs.existsSync(path.join(pageDirectory, file)));
+
+    if (layoutFile) {
+        components.push(`import Layout from "${projectDirectory}/src/pages/${layoutFile}";\n`);
     } else {
         components.push('import { Outlet } from "react-router-dom";')
         components.push(`
@@ -109,9 +114,10 @@ export function buildRouter(aplos) {
 /**
  *
  * @param {string} dirPath
+ * @param {string[]} extensions
  * @returns {*[]}
  */
-export function getFiles(dirPath) {
+export function getFiles(dirPath, extensions = ['.tsx', '.js', '.jsx']) {
     let files = fs.readdirSync(dirPath);
     let fileList = [];
     files.forEach(function (file) {
@@ -119,12 +125,14 @@ export function getFiles(dirPath) {
             return;
         }
 
-        if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
-            fileList = fileList.concat(getFiles(path.join(dirPath, file)));
-        } else {
-            let filePath = path.join(dirPath, file);
-            filePath = filePath.replace(process.cwd() + "/src/pages", "");
-            fileList.push(filePath);
+        const filePath = path.join(dirPath, file);
+        const stat = fs.statSync(filePath);
+
+        if (stat.isDirectory()) {
+            fileList = fileList.concat(getFiles(filePath, extensions));
+        } else if (extensions.some(ext => file.endsWith(ext))) {
+            const relativePath = filePath.replace(process.cwd() + "/src/pages", "");
+            fileList.push(relativePath);
         }
     });
     return fileList;
