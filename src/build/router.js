@@ -41,14 +41,22 @@ export function buildRouter(aplos) {
     filenames.forEach(file => {
         let name = file.replace('~', '').replace(/\.(js|tsx|jsx)$/, '');
         let nameParts = name.split('/');
-
         let fileName = nameParts.pop();
-        let capitalizeName = generateComponentName(nameParts, fileName);
-        let path = capitalizeName === 'Index' ? '/' : name;
-        let found = routes.find(element => element.source === path);
 
+        let capitalizeName = generateComponentName(nameParts, fileName);
+
+        // Générer le path
+        let path;
+        if (fileName === 'index') {
+            // Si c'est un fichier index, utiliser le chemin du dossier parent
+            path = nameParts.join('/') || '/';
+        } else {
+            path = name;
+        }
+
+        let found = routes.find(element => element.source === path);
         if (found) {
-            path = found.destination
+            path = found.destination;
         }
 
         path = path.replace(/\[(.*?)]/g, ':$1');
