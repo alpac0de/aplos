@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import devServer from "../src/command/devSever";
+import devServer from "../src/command/devServer";
 import build from "../src/command/build";
 import router from "../src/command/router";
 
