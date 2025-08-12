@@ -9,7 +9,7 @@ export default (options) => {
 
     buildRouter(get_config(projectDirectory));
 
-    exec(node_modules + "/.bin/webpack-cli --mode="+options.mode+" --config " + runtime_dir + "/../webpack.config.js --entry " + projectDirectory + "/.aplos/cache/app.js", (error, stdout, stderr) => {
+    exec(node_modules + "/.bin/rspack --mode="+options.mode+" --config " + runtime_dir + "/../rspack.config.js --entry " + projectDirectory + "/.aplos/cache/app.js", (error, stdout, stderr) => {
         if (error) {
             console.log(`error: ${error.message}`);
             return;
