@@ -1,9 +1,12 @@
 import React from "react";
-import {Helmet} from "react-helmet";
+import { Helmet, HelmetProvider } from 'react-helmet-async';
+
 export default function Head({children}) {
     return (
-        <Helmet>
-            {children}
-        </Helmet>
+        <HelmetProvider>
+            <Helmet>
+                {children}
+            </Helmet>
+        </HelmetProvider>
     );
 }
