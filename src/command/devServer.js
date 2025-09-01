@@ -2,9 +2,15 @@ import path from "path";
 import fs from "fs";
 import { rspack } from "@rspack/core";
 import { RspackDevServer } from "@rspack/dev-server";
-import {buildRouter} from "../build/router";
+import {buildRouter} from "../build/router.js";
 import chokidar from "chokidar";
-import get_config from "../build/config";
+import get_config from "../build/config.js";
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
 
 let config = get_config(process.cwd());
 
@@ -15,38 +21,38 @@ fs.writeFileSync(
     "module.exports = " + JSON.stringify(config),
 );
 
-export default () => {
+export default async () => {
     let projectDirectory = process.cwd();
     let firstBuild = true;
-    buildRouter(config);
+    await buildRouter(config);
 
     const watcher = chokidar.watch(projectDirectory + "/src", {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
         persistent: true,
     });
 
-    watcher.on("change", (path) => {
+    watcher.on("change", async (path) => {
         console.log(`File ${path} has been changed`);
-        buildRouter(config);
+        await buildRouter(config);
     });
 
     const changedFiles = [];
-    watcher.on("add", (path) => {
+    watcher.on("add", async (path) => {
         if (firstBuild && !changedFiles.includes(path)) {
-            buildRouter(config);
+            await buildRouter(config);
             changedFiles.push(path);
         }
 
         firstBuild = false;
     });
 
-    watcher.on("unlink", () => {
-        buildRouter(config);
+    watcher.on("unlink", async () => {
+        await buildRouter(config);
     });
 
     let runtime_dir = __dirname + "/..";
 
-    const rspackConfig = require(runtime_dir + "/../rspack.config.js");
+    const { default: rspackConfig } = await import(runtime_dir + "/../rspack.config.js");
     rspackConfig.mode = "development";
     rspackConfig.entry = [projectDirectory + "/.aplos/cache/app.js"];
 

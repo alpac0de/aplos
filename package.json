@@ -4,6 +4,7 @@
   "description": "Another react framework",
   "author": "Mbechezi Nawo",
   "license": "MIT",
+  "type": "module",
   "bin": {
     "aplos": "bin/aplos"
   },

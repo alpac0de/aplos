@@ -1,5 +1,10 @@
-const path = require("path");
-const { HtmlRspackPlugin, CssExtractRspackPlugin } = require("@rspack/core");
+import path from "path";
+import { HtmlRspackPlugin, CssExtractRspackPlugin } from "@rspack/core";
+import ReactRefreshPlugin from "@rspack/plugin-react-refresh";
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const projectDirectory = process.cwd();
@@ -12,11 +17,10 @@ const plugins = [
 ];
 
 if (isDevelopment) {
-    const ReactRefreshPlugin = require("@rspack/plugin-react-refresh");
     plugins.push(new ReactRefreshPlugin());
 }
 
-module.exports = {
+export default {
     mode: isDevelopment ? 'development' : 'production',
     optimization: {
         minimize: !isDevelopment,

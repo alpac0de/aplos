@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import devServer from "../src/command/devServer";
-import build from "../src/command/build";
-import router from "../src/command/router";
+import devServer from "../src/command/devServer.js";
+import build from "../src/command/build.js";
+import router from "../src/command/router.js";
 
 const program = new Command();
 program.name("Aplos").description("React Framework").version("0.0.1");

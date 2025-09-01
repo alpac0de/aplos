@@ -1,6 +1,6 @@
 import {spawn} from "child_process";
-import {buildRouter}  from "../build/router";
-import get_config from '../build/config';
+import {buildRouter}  from "../build/router.js";
+import get_config from '../build/config.js';
 
 export default async (options) => {
     let projectDirectory = process.cwd();

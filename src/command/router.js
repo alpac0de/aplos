@@ -1,13 +1,13 @@
-const { buildRouter } = require("../build/router");
-const get_config = require("../build/config").default;
-const Table = require("cli-table3");
-const fs = require("fs");
+import { buildRouter } from "../build/router.js";
+import get_config from "../build/config.js";
+import Table from "cli-table3";
+import fs from "fs";
 
 
-module.exports = (options) => {
+export default async (options) => {
   let projectDirectory = process.cwd();
 
-  buildRouter(get_config(projectDirectory));
+  await buildRouter(get_config(projectDirectory));
 
   const data = fs
     .readFileSync(projectDirectory + "/.aplos/cache/router.js")
