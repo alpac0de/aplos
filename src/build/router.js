@@ -19,6 +19,10 @@ export async function buildRouter(aplos) {
     }
 
     const filenames = await getFiles(pageDirectory, appExtensions);
+    if (filenames.length === 0) {
+        console.warn('No page files found in:', pageDirectory);
+    }
+    
     const routes = aplos.routes || [];
 
     const generateComponentName = (nameParts, fileName) => {
@@ -93,7 +97,14 @@ export async function buildRouter(aplos) {
     const appFileName = '_app';
     const appFile = appExtensions
         .map(ext => `${appFileName}${ext}`)
-        .find(file => fs.existsSync(path.join(pageDirectory, file)));
+        .find(file => {
+            try {
+                return fs.existsSync(path.join(pageDirectory, file));
+            } catch (error) {
+                console.warn(`Error checking for ${file}:`, error.message);
+                return false;
+            }
+        });
 
     if (appFile) {
         components.push(`import Layout from "${projectDirectory}/src/pages/${appFile}";\n`);
@@ -116,8 +127,23 @@ export async function buildRouter(aplos) {
 
     template = template.replace('{components}', components.join(''));
 
-    fs.writeFileSync(path.join(projectDirectory, '.aplos', 'cache', 'router.js'), JSON.stringify(routes));
-    fs.writeFileSync(path.join(projectDirectory, '.aplos', 'cache', 'app.js'), template);
+    // Ensure cache directory exists and write files
+    try {
+        const cacheDir = path.join(projectDirectory, '.aplos', 'cache');
+        await fs.promises.mkdir(cacheDir, { recursive: true });
+        
+        await fs.promises.writeFile(
+            path.join(cacheDir, 'router.js'), 
+            JSON.stringify(routes)
+        );
+        await fs.promises.writeFile(
+            path.join(cacheDir, 'app.js'), 
+            template
+        );
+    } catch (error) {
+        console.error('Failed to write cache files:', error.message);
+        throw error;
+    }
 }
 
 /**

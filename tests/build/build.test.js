@@ -1,4 +1,4 @@
-import { getFiles, formatPath } from '../../src/build/router.js';
+import { getFiles, formatPath, buildRouter } from '../../src/build/router.js';
 import fs from 'fs/promises';
 import { beforeAll, afterAll, describe, it, expect } from 'bun:test';
 import path from 'path';
@@ -62,5 +62,69 @@ describe('formatPath', () => {
     it('should handle string without special chars', () => {
         const result = formatPath('normalpath');
         expect(result).toBe('normalpath');
+    });
+});
+
+describe('buildRouter error handling', () => {
+    const testProjectDir = '/tmp/aplos-error-test';
+    
+    afterAll(async () => {
+        // Clean up test directory
+        await fs.rm(testProjectDir, { recursive: true, force: true });
+    });
+
+    it('should handle empty pages directory gracefully', async () => {
+        // Create project with empty pages dir
+        await fs.mkdir(path.join(testProjectDir, 'src', 'pages'), { recursive: true });
+        
+        // Mock process.cwd to return our test directory
+        const originalCwd = process.cwd;
+        process.cwd = () => testProjectDir;
+        
+        // Should not throw, just warn
+        expect(async () => {
+            await buildRouter({ routes: [] });
+        }).not.toThrow();
+        
+        // Restore original cwd
+        process.cwd = originalCwd;
+    });
+
+    it('should create cache directory if it doesn\'t exist', async () => {
+        // Create project with a page file and template
+        await fs.mkdir(path.join(testProjectDir, 'src', 'pages'), { recursive: true });
+        await fs.mkdir(path.join(testProjectDir, 'templates'), { recursive: true });
+        await fs.writeFile(path.join(testProjectDir, 'src', 'pages', 'index.tsx'), 'export default () => <div>Test</div>');
+        
+        // Copy the real template to test directory
+        const realTemplatePath = path.join(process.cwd(), 'templates', 'root.jsx');
+        const realTemplate = await fs.readFile(realTemplatePath, 'utf8');
+        await fs.writeFile(path.join(testProjectDir, 'templates', 'root.jsx'), realTemplate);
+        
+        // Mock __dirname to point to our test directory
+        const originalDirname = globalThis.__dirname;
+        globalThis.__dirname = path.join(testProjectDir, 'src', 'build');
+        
+        // Mock process.cwd to return our test directory
+        const originalCwd = process.cwd;
+        process.cwd = () => testProjectDir;
+        
+        try {
+            await buildRouter({ routes: [] });
+            
+            // Check that cache directory and files were created
+            const cacheExists = await fs.access(path.join(testProjectDir, '.aplos', 'cache')).then(() => true).catch(() => false);
+            expect(cacheExists).toBe(true);
+            
+            const routerFileExists = await fs.access(path.join(testProjectDir, '.aplos', 'cache', 'router.js')).then(() => true).catch(() => false);
+            expect(routerFileExists).toBe(true);
+            
+            const appFileExists = await fs.access(path.join(testProjectDir, '.aplos', 'cache', 'app.js')).then(() => true).catch(() => false);
+            expect(appFileExists).toBe(true);
+        } finally {
+            // Restore mocks
+            globalThis.__dirname = originalDirname;
+            process.cwd = originalCwd;
+        }
     });
 });
