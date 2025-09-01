@@ -1,4 +1,4 @@
-import {exec} from "child_process";
+import {spawn} from "child_process";
 import {buildRouter}  from "../build/router";
 import get_config from '../build/config';
 
@@ -9,17 +9,23 @@ export default (options) => {
 
     buildRouter(get_config(projectDirectory));
 
-    exec(node_modules + "/.bin/rspack --mode="+options.mode+" --config " + runtime_dir + "/../rspack.config.js --entry " + projectDirectory + "/.aplos/cache/app.js", (error, stdout, stderr) => {
-        if (error) {
-            console.log(`error: ${error.message}`);
-            return;
-        }
+    const rspack = spawn(node_modules + "/.bin/rspack", [
+        "--mode=" + options.mode,
+        "--config", runtime_dir + "/../rspack.config.js",
+        "--entry", projectDirectory + "/.aplos/cache/app.js"
+    ]);
 
-        if (stderr) {
-            console.log(`stderr: ${stderr}`);
-            return;
-        }
+    rspack.stdout.on('data', (data) => {
+        console.log(data.toString());
+    });
 
-        console.log(`${stdout}`);
+    rspack.stderr.on('data', (data) => {
+        console.log(`stderr: ${data.toString()}`);
+    });
+
+    rspack.on('close', (code) => {
+        if (code !== 0) {
+            console.log(`error: Process exited with code ${code}`);
+        }
     });
 };
