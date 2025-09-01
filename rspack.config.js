@@ -12,8 +12,12 @@ const projectDirectory = process.cwd();
 const plugins = [
     new HtmlRspackPlugin({
         template: path.resolve(__dirname, "./src/client/public/index.html"),
+        minify: !isDevelopment,
     }),
-    new CssExtractRspackPlugin(),
+    new CssExtractRspackPlugin({
+        filename: isDevelopment ? '[name].css' : '[name].[contenthash:8].css',
+        chunkFilename: isDevelopment ? '[id].css' : '[id].[contenthash:8].css',
+    }),
 ];
 
 if (isDevelopment) {
@@ -24,10 +28,33 @@ export default {
     mode: isDevelopment ? 'development' : 'production',
     optimization: {
         minimize: !isDevelopment,
+        splitChunks: !isDevelopment ? {
+            chunks: 'all',
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/]/,
+                    name: 'vendors',
+                    chunks: 'all',
+                    priority: 10,
+                },
+                common: {
+                    minChunks: 2,
+                    name: 'common',
+                    chunks: 'all',
+                    priority: 5,
+                    reuseExistingChunk: true,
+                },
+            },
+        } : false,
+        usedExports: !isDevelopment,
+        sideEffects: false,
     },
     output: {
         path: path.resolve(process.cwd(), "./public/dist"),
         publicPath: "/",
+        filename: isDevelopment ? '[name].js' : '[name].[contenthash:8].js',
+        chunkFilename: isDevelopment ? '[name].js' : '[name].[contenthash:8].js',
+        clean: true, // Clean dist folder on each build
     },
     module: {
         rules: [
