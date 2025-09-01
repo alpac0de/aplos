@@ -27,6 +27,9 @@ export async function buildRouter(aplos) {
         console.warn('No page files found in:', pageDirectory);
     }
     
+    // Build layout tree for nested layouts
+    const layoutTree = buildLayoutTree(pageDirectory, appExtensions);
+    
     const routes = aplos.routes || [];
 
     const generateComponentName = (nameParts, fileName) => {
@@ -84,19 +87,23 @@ export async function buildRouter(aplos) {
         }
     });
 
+    // Build nested route structure
+    const nestedRoutes = buildNestedRoutes(pages, layoutTree);
+
     let template = fs.readFileSync(__dirname + "/../../templates/root.jsx").toString();
 
-    let router = pages.map(route => {
-        return `<Route path="${route.path}" element={<${route.component} />} />\n`;
-    });
-
-    template = template.replace('{routes}', router.join(' '));
+    template = template.replace('{routes}', nestedRoutes);
 
     let components = pages.map((route) => {
         const componentFileName = route.file.replace('~', '');
 
         return `import ${route.component} from "${projectDirectory}/src/pages${componentFileName}";\n`;
     })
+    
+    // Add layout imports
+    layoutTree.forEach((layout) => {
+        components.push(`import ${layout.component} from "${projectDirectory}/src/pages/${layout.file}";\n`);
+    });
 
     const appFileName = '_app';
     const appFile = appExtensions
@@ -180,4 +187,125 @@ export async function getFiles(dirPath, extensions) {
  */
 export function formatPath(path) {
     return path.replace(/[\[\]_-]/g, '');
+}
+
+/**
+ * Build nested layout tree by scanning for _layout files
+ * @param {string} pageDirectory 
+ * @param {string[]} extensions 
+ * @returns {Map<string, object>}
+ */
+function buildLayoutTree(pageDirectory, extensions) {
+    const layouts = new Map();
+    
+    function generateLayoutName(pathPrefix) {
+        if (!pathPrefix || pathPrefix === '/') return 'RootLayout';
+        return pathPrefix.split('/').filter(Boolean).map(part => 
+            part.charAt(0).toUpperCase() + formatPath(part.slice(1))
+        ).join('') + 'Layout';
+    }
+    
+    function scanLayouts(dir, pathPrefix = '') {
+        const layoutFile = extensions
+            .map(ext => `_layout${ext}`)
+            .find(file => {
+                try {
+                    return fs.existsSync(path.join(dir, file));
+                } catch (error) {
+                    return false;
+                }
+            });
+            
+        if (layoutFile) {
+            const layoutPath = pathPrefix ? path.join(pathPrefix, layoutFile) : layoutFile;
+            layouts.set(pathPrefix || '/', {
+                file: layoutPath,
+                component: generateLayoutName(pathPrefix),
+                path: pathPrefix || '/'
+            });
+        }
+        
+        // Scan subdirectories recursively
+        try {
+            const subdirs = fs.readdirSync(dir, { withFileTypes: true })
+                .filter(dirent => dirent.isDirectory() && !dirent.name.startsWith('_'))
+                .map(dirent => dirent.name);
+                
+            subdirs.forEach(subdir => {
+                const newPathPrefix = pathPrefix ? path.join(pathPrefix, subdir) : subdir;
+                scanLayouts(
+                    path.join(dir, subdir), 
+                    newPathPrefix
+                );
+            });
+        } catch (error) {
+            // Ignore directories we can't read
+        }
+    }
+    
+    scanLayouts(pageDirectory);
+    return layouts;
+}
+
+/**
+ * Build nested route structure with layouts
+ * @param {Array} pages 
+ * @param {Map} layoutTree 
+ * @returns {string}
+ */
+function buildNestedRoutes(pages, layoutTree) {
+    // Group pages by their directory path
+    const routesByPath = new Map();
+    
+    pages.forEach(page => {
+        const pagePath = page.path;
+        const segments = pagePath.split('/').filter(Boolean);
+        
+        // Find the most specific layout for this page
+        let layoutPath = '/';
+        for (let i = segments.length; i > 0; i--) {
+            const testPath = '/' + segments.slice(0, i).join('/');
+            if (layoutTree.has(testPath)) {
+                layoutPath = testPath;
+                break;
+            }
+        }
+        
+        if (!routesByPath.has(layoutPath)) {
+            routesByPath.set(layoutPath, []);
+        }
+        routesByPath.get(layoutPath).push(page);
+    });
+    
+    // Build nested JSX structure
+    function buildRouteLevel(currentPath = '/', level = 0) {
+        const indent = '                '.repeat(level + 1);
+        let routes = '';
+        
+        // Add pages for this level
+        const pagesAtLevel = routesByPath.get(currentPath) || [];
+        pagesAtLevel.forEach(page => {
+            routes += `${indent}<Route path="${page.path}" element={<${page.component} />} />\n`;
+        });
+        
+        // Add nested layouts
+        Array.from(layoutTree.keys())
+            .filter(layoutPath => layoutPath.startsWith(currentPath) && layoutPath !== currentPath)
+            .forEach(layoutPath => {
+                const layout = layoutTree.get(layoutPath);
+                routes += `${indent}<Route path="${layoutPath}" element={<${layout.component} />}>\n`;
+                routes += buildRouteLevel(layoutPath, level + 1);
+                routes += `${indent}</Route>\n`;
+            });
+        
+        return routes;
+    }
+    
+    // Start with root layout or plain routes
+    if (layoutTree.has('/')) {
+        const rootLayout = layoutTree.get('/');
+        return `<Route element={<${rootLayout.component} />}>\n${buildRouteLevel()}                    <Route path="*" element={<NoMatch />} />\n                </Route>`;
+    } else {
+        return buildRouteLevel() + '                    <Route path="*" element={<NoMatch />} />';
+    }
 }
