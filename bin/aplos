@@ -29,4 +29,10 @@ program
   .description("Debug the router")
   .action(router);
 
+program
+  .command("router:match")
+  .argument("<url>", "URL to test against routes")
+  .description("Test if a URL matches any route")
+  .action((url) => router({ url }));
+
 program.parse();
