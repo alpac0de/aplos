@@ -4,12 +4,19 @@ import Table from "cli-table3";
 import fs from "fs";
 
 
-// Function to check if URL matches a route pattern
-const matchRoute = (url, routePath) => {
+// Function to check if URL matches a route pattern with requirements
+const matchRoute = (url, routePath, requirements = {}) => {
   // Convert React Router path to regex
-  const pattern = routePath
-    .replace(/\//g, '\\/')  // Escape forward slashes
-    .replace(/:([^/]+)/g, '([^/]+)'); // Convert :param to capture groups
+  let pattern = routePath.replace(/\//g, '\\/');  // Escape forward slashes
+  
+  // Get parameter names first
+  const paramNames = [...routePath.matchAll(/:([^/]+)/g)].map(m => m[1]);
+  
+  // Replace each parameter with its requirement pattern or default
+  paramNames.forEach(paramName => {
+    const requirement = requirements[paramName] || '[^/]+';
+    pattern = pattern.replace(`:${paramName}`, `(${requirement})`);
+  });
     
   const regex = new RegExp(`^${pattern}$`);
   const match = url.match(regex);
@@ -17,7 +24,6 @@ const matchRoute = (url, routePath) => {
   if (match) {
     // Extract parameters
     const params = {};
-    const paramNames = [...routePath.matchAll(/:([^/]+)/g)].map(m => m[1]);
     paramNames.forEach((name, index) => {
       params[name] = match[index + 1];
     });
@@ -48,7 +54,7 @@ export default async (options) => {
       // Skip config routes without path
       if (!route.path) continue;
       
-      const result = matchRoute(url, route.path);
+      const result = matchRoute(url, route.path, route.requirements || route.requirement || {});
       if (result.match) {
         matchedRoute = route;
         matchParams = result.params;
@@ -67,7 +73,8 @@ export default async (options) => {
       table.push(["Path Regex", `{^${regexPattern}$}`]);
       table.push(["Host", "ANY"]);
       table.push(["Scheme", "ANY"]);
-      table.push(["Requirements", matchedRoute.requirement ? JSON.stringify(matchedRoute.requirement) : "NO CUSTOM"]);
+      const reqs = matchedRoute.requirements || matchedRoute.requirement || {};
+      table.push(["Requirements", Object.keys(reqs).length > 0 ? JSON.stringify(reqs) : "NO CUSTOM"]);
       
       if (Object.keys(matchParams).length > 0) {
         table.push(["Parameters", JSON.stringify(matchParams)]);
