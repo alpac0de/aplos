@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { glob } from 'glob';
 
-export function buildRouter(aplos) {
+export async function buildRouter(aplos) {
     console.info('Building...');
     const appExtensions = ['.tsx', '.jsx', '.js'];
 
@@ -17,7 +18,7 @@ export function buildRouter(aplos) {
         return;
     }
 
-    const filenames = getFiles(pageDirectory, appExtensions);
+    const filenames = await getFiles(pageDirectory, appExtensions);
     const routes = aplos.routes || [];
 
     const generateComponentName = (nameParts, fileName) => {
@@ -123,27 +124,23 @@ export function buildRouter(aplos) {
  *
  * @param {string} dirPath
  * @param {string[]} extensions
- * @returns {*[]}
+ * @returns {Promise<string[]>}
  */
-export function getFiles(dirPath, extensions) {
-    let files = fs.readdirSync(dirPath);
-    let fileList = [];
-    files.forEach(function (file) {
-        if (file.startsWith('_')) {
-            return;
-        }
-
-        const filePath = path.join(dirPath, file);
-        const stat = fs.statSync(filePath);
-
-        if (stat.isDirectory()) {
-            fileList = fileList.concat(getFiles(filePath, extensions));
-        } else if (extensions.some(ext => file.endsWith(ext))) {
-            const relativePath = filePath.replace(process.cwd() + "/src/pages", "");
-            fileList.push(relativePath);
-        }
-    });
-    return fileList;
+export async function getFiles(dirPath, extensions) {
+    const patterns = extensions.map(ext => `**/*${ext}`);
+    const globPattern = patterns.length === 1 ? patterns[0] : `{${patterns.join(',')}}`;
+    
+    try {
+        const files = await glob(globPattern, {
+            cwd: dirPath,
+            ignore: ['**/_*'] // ignore files starting with _
+        });
+        
+        return files.map(file => '/' + file);
+    } catch (error) {
+        console.error(`Error globbing files in ${dirPath}:`, error);
+        return [];
+    }
 }
 
 /**

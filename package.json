@@ -29,6 +29,7 @@
     "cli-table3": "^0.6.5",
     "commander": "^13.1.0",
     "css-loader": "^7.1.2",
+    "glob": "^11.0.3",
     "postcss": "^8.5.4",
     "react-helmet-async": "^2.0.5",
     "react-refresh": "^0.16.0",
