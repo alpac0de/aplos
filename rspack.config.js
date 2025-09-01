@@ -26,6 +26,7 @@ if (isDevelopment) {
 
 export default {
     mode: isDevelopment ? 'development' : 'production',
+    devtool: isDevelopment ? 'eval-source-map' : 'source-map',
     optimization: {
         minimize: !isDevelopment,
         splitChunks: !isDevelopment ? {
