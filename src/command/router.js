@@ -7,7 +7,7 @@ import fs from "fs";
 export default async (options) => {
   let projectDirectory = process.cwd();
 
-  await buildRouter(get_config(projectDirectory));
+  await buildRouter(await get_config(projectDirectory));
 
   const data = fs
     .readFileSync(projectDirectory + "/.aplos/cache/router.js")

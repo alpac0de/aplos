@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
+import { pathToFileURL } from "url";
 
-export default () => {
+export default async () => {
     const cacheDirectory = process.cwd() + "/.aplos/cache";
 
     try {
@@ -23,7 +24,8 @@ export default () => {
 
     try {
         if (fs.existsSync(configPath)) {
-            let config = require(configPath);
+            const configModule = await import(pathToFileURL(configPath).href);
+            const config = configModule.default || configModule;
             aplos = {...aplos, ...config};
         }
     } catch (error) {

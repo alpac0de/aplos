@@ -39,16 +39,23 @@ const findAvailablePort = async (startPort) => {
     throw new Error(`No available port found starting from ${startPort}`);
 };
 
-let config = get_config(process.cwd());
-
-const cacheDirectory = process.cwd() + "/.aplos/cache";
-
-fs.writeFileSync(
-    cacheDirectory + "/config.js",
-    "module.exports = " + JSON.stringify(config),
-);
-
 export default async () => {
+    const config = await get_config(process.cwd());
+    const cacheDirectory = process.cwd() + "/.aplos/cache";
+
+    // Ensure cache directory exists first
+    try {
+        if (!fs.existsSync(cacheDirectory)) {
+            fs.mkdirSync(cacheDirectory, { recursive: true });
+        }
+    } catch (err) {
+        console.error('Error creating cache directory:', err);
+    }
+
+    fs.writeFileSync(
+        cacheDirectory + "/config.js",
+        "module.exports = " + JSON.stringify(config),
+    );
     let projectDirectory = process.cwd();
     let firstBuild = true;
     await buildRouter(config);

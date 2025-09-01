@@ -7,7 +7,7 @@ export default async (options) => {
     let runtime_dir = __dirname + "/..";
     let node_modules = projectDirectory + "/node_modules";
 
-    await buildRouter(get_config(projectDirectory));
+    await buildRouter(await get_config(projectDirectory));
 
     const rspack = spawn(node_modules + "/.bin/rspack", [
         "--mode=" + options.mode,
