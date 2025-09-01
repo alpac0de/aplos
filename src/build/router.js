@@ -149,9 +149,5 @@ export async function getFiles(dirPath, extensions) {
  * @returns {string}
  */
 export function formatPath(path) {
-    return path
-        .replaceAll('[', '')
-        .replaceAll(']', '')
-        .replaceAll('_', '')
-        .replaceAll('-', '');
+    return path.replace(/[\[\]_-]/g, '');
 }
