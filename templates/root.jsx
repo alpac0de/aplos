@@ -131,10 +131,7 @@ function App() {
         <ErrorBoundary>
             <BrowserRouter>
                 <Routes>
-                    <Route element={<Layout />}>
-                        {routes}
-                        <Route path="*" element={ <NoMatch />} />
-                    </Route>
+                    {routes}
                 </Routes>
             </BrowserRouter>
         </ErrorBoundary>
