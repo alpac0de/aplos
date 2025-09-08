@@ -22,14 +22,14 @@ export default async () => {
 
     const configPath = path.join(process.cwd(), 'aplos.config.js');
 
-    try {
-        if (fs.existsSync(configPath)) {
+    if (fs.existsSync(configPath)) {
+        try {
             const configModule = await import(pathToFileURL(configPath).href);
             const config = configModule.default || configModule;
             aplos = {...aplos, ...config};
+        } catch (error) {
+            console.error('Erreur lors du chargement de la configuration :', error);
         }
-    } catch (error) {
-        console.error('Erreur lors du chargement de la configuration :', error);
     }
 
     return aplos;
