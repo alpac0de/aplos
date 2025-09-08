@@ -93,12 +93,12 @@ export default {
     },
     resolve: {
         alias: {
-            "aplos/config": path.resolve(__dirname, "src/components/config.js"),
+            "aplos/config": path.resolve(__dirname, "src/config.js"),
             "aplos/navigation": path.resolve(__dirname, "src/components/navigation.jsx"),
             "aplos/head": path.resolve(__dirname, "src/components/head.jsx"),
             "@": projectDirectory + "/src",
             "~": projectDirectory + "/src",
-            "@config": projectDirectory + "/.aplos/cache/config.js",
+            "@aplos_config": projectDirectory + "/.aplos/cache/config.js",
         },
         extensions: ['.ts', '.tsx', '.js', '.jsx']
     },
