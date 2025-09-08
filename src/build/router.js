@@ -118,11 +118,11 @@ export async function buildRouter(aplos) {
         });
 
     if (appFile) {
-        components.push(`import Layout from "${projectDirectory}/src/pages/${appFile}";\n`);
+        components.push(`import AppLayout from "${projectDirectory}/src/pages/${appFile}";\n`);
     } else {
         components.push('import { Outlet } from "react-router-dom";')
         components.push(`
-        const Layout = () => {
+        const AppLayout = () => {
             return <Outlet />;
         };\n`);
     }
@@ -297,7 +297,7 @@ function buildNestedRoutes(pages, layoutTree) {
             .filter(layoutPath => layoutPath.startsWith(currentPath) && layoutPath !== currentPath)
             .forEach(layoutPath => {
                 const layout = layoutTree.get(layoutPath);
-                routes += `${indent}<Route path="${layoutPath}" element={<${layout.component} />}>\n`;
+                routes += `${indent}<Route element={<${layout.component} />}>\n`;
                 routes += buildRouteLevel(layoutPath, level + 1);
                 routes += `${indent}</Route>\n`;
             });
@@ -305,11 +305,15 @@ function buildNestedRoutes(pages, layoutTree) {
         return routes;
     }
 
-    // Start with root layout or plain routes
+    // Start with app layout wrapping everything
+    let routesContent = buildRouteLevel() + '                    <Route path="*" element={<NoMatch />} />';
+    
+    // Wrap with root layout if exists
     if (layoutTree.has('/')) {
         const rootLayout = layoutTree.get('/');
-        return `<Route element={<${rootLayout.component} />}>\n${buildRouteLevel()}                    <Route path="*" element={<NoMatch />} />\n                </Route>`;
-    } else {
-        return buildRouteLevel() + '                    <Route path="*" element={<NoMatch />} />';
+        routesContent = `<Route element={<${rootLayout.component} />}>\n${routesContent}\n                </Route>`;
     }
+    
+    // Wrap everything with AppLayout
+    return `<Route element={<AppLayout />}>\n                    ${routesContent}\n                </Route>`;
 }
