@@ -28,7 +28,7 @@ export default async () => {
             const config = configModule.default || configModule;
             aplos = {...aplos, ...config};
         } catch (error) {
-            console.error('Erreur lors du chargement de la configuration :', error);
+            console.error('Error loading configuration:', error);
         }
     }
 

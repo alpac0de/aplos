@@ -57,10 +57,8 @@ export async function buildRouter(aplos) {
 
         let capitalizeName = generateComponentName(nameParts, fileName);
 
-        // Générer le path
         let path;
         if (fileName === 'index') {
-            // Si c'est un fichier index, utiliser le chemin du dossier parent
             path = nameParts.join('/') || '/';
         } else {
             path = name;

@@ -1,9 +1,7 @@
 import { getFiles, formatPath, buildRouter } from '../../src/build/router.js';
 import fs from 'fs/promises';
-import { beforeAll, afterAll, describe, it, expect } from 'bun:test';
 import path from 'path';
 
-// Create test directory structure
 const testDir = '/tmp/aplos-test';
 
 describe('getFiles', () => {

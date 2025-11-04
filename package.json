@@ -1,59 +1,78 @@
 {
   "name": "aplosjs",
   "version": "0.0.1",
-  "description": "Another react framework",
+  "description": "A fast, modern React framework",
   "author": "Mbechezi Nawo",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alpac0de/aplos.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alpac0de/aplos/issues"
+  },
+  "homepage": "https://github.com/alpac0de/aplos#readme",
+  "keywords": [
+    "react",
+    "framework",
+    "routing",
+    "file-based-routing",
+    "rspack",
+    "frontend",
+    "spa"
+  ],
   "bin": {
     "aplos": "bin/aplos"
   },
   "scripts": {
     "dev": "bin/aplos server",
-    "test": "jest",
+    "test": "bun test",
     "lint": "eslint"
   },
   "dependencies": {
-    "@babel/core": "^7.26.10",
-    "@babel/plugin-proposal-decorators": "^7.25.9",
-    "@babel/preset-env": "^7.26.9",
-    "@babel/preset-react": "^7.26.3",
-    "@babel/preset-typescript": "^7.26.0",
-    "@rspack/cli": "^1.4.11",
-    "@rspack/core": "^1.4.11",
-    "@rspack/dev-server": "^1.1.3",
+    "@babel/core": "^7.28.5",
+    "@babel/plugin-proposal-decorators": "^7.28.0",
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
+    "@rspack/cli": "^1.6.0",
+    "@rspack/core": "^1.6.0",
+    "@rspack/dev-server": "^1.1.4",
     "@rspack/plugin-html": "^0.5.8",
-    "@rspack/plugin-react-refresh": "^1.4.3",
+    "@rspack/plugin-react-refresh": "^1.5.2",
     "autoprefixer": "^10.4.21",
-    "babel-jest": "^29.7.0",
     "babel-loader": "^10.0.0",
-    "babel-plugin-react-compiler": "^19.1.0-rc.3",
+    "babel-plugin-react-compiler": "19.1.0-rc.3",
     "chokidar": "^4.0.3",
     "cli-table3": "^0.6.5",
-    "commander": "^13.1.0",
+    "commander": "^14.0.0",
     "css-loader": "^7.1.2",
     "glob": "^11.0.3",
-    "postcss": "^8.5.4",
+    "postcss": "^8.5.6",
+    "postcss-nested": "^7.0.2",
     "react-helmet-async": "^2.0.5",
     "react-refresh": "^0.16.0",
-    "react-router-dom": "^7.4.0",
+    "react-router-dom": "^7.9.5",
     "style-loader": "^4.0.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.23.0",
-    "eslint": "^9.23.0",
-    "eslint-plugin-react": "^7.37.4",
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-compiler": "^19.1.0-rc.2",
-    "globals": "^16.0.0",
-    "jest": "^29.7.0",
-    "react": "19",
-    "react-dom": "19"
+    "globals": "^16.5.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "exports": {
     "./config": "./src/components/config",
     "./navigation": "./src/components/navigation",
     "./head": "./src/components/head"
-  },
-  "packageManager": "yarn@4.5.1+sha512.341db9396b6e289fecc30cd7ab3af65060e05ebff4b3b47547b278b9e67b08f485ecd8c79006b405446262142c7a38154445ef7f17c1d5d1de7d90bf9ce7054d"
+  }
 }
