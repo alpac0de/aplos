@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { HelmetProvider } from 'react-helmet-async';
 {components}
 import {
     Routes,
@@ -128,13 +129,15 @@ function ErrorBoundary({ children }) {
 
 function App() {
     return (
-        <ErrorBoundary>
-            <BrowserRouter>
-                <Routes>
-                    {routes}
-                </Routes>
-            </BrowserRouter>
-        </ErrorBoundary>
+        <HelmetProvider>
+            <ErrorBoundary>
+                <BrowserRouter>
+                    <Routes>
+                        {routes}
+                    </Routes>
+                </BrowserRouter>
+            </ErrorBoundary>
+        </HelmetProvider>
     );
 }
 
