@@ -57,31 +57,60 @@ export default async () => {
         "module.exports = " + JSON.stringify(config),
     );
     let projectDirectory = process.cwd();
-    let firstBuild = true;
+
+    // Debounce mechanism to batch rapid file changes
+    let buildTimeout = null;
+    let pendingChanges = [];
+
+    const scheduleBuild = (reason, filePath = null) => {
+        if (filePath) {
+            pendingChanges.push(filePath);
+        }
+
+        if (buildTimeout) {
+            clearTimeout(buildTimeout);
+        }
+
+        buildTimeout = setTimeout(async () => {
+            const changes = [...pendingChanges];
+            pendingChanges = [];
+            buildTimeout = null;
+
+            const startTime = Date.now();
+            console.log(`\x1b[36m⚡ Rebuilding...\x1b[0m ${reason}`);
+
+            await buildRouter(config);
+
+            const duration = Date.now() - startTime;
+            console.log(`\x1b[32m✓ Built in ${duration}ms\x1b[0m`);
+        }, 100); // 100ms debounce
+    };
+
+    // Initial build
+    const startTime = Date.now();
+    console.log('\x1b[36m⚡ Building routes...\x1b[0m');
     await buildRouter(config);
+    console.log(`\x1b[32m✓ Ready in ${Date.now() - startTime}ms\x1b[0m`);
 
     const watcher = chokidar.watch(projectDirectory + "/src", {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
         persistent: true,
+        ignoreInitial: true, // Don't trigger 'add' for existing files
     });
 
-    watcher.on("change", async (path) => {
-        console.log(`File ${path} has been changed`);
-        await buildRouter(config);
+    watcher.on("change", (filePath) => {
+        const relativePath = filePath.replace(projectDirectory, '');
+        scheduleBuild(`\x1b[90m${relativePath}\x1b[0m`, filePath);
     });
 
-    const changedFiles = [];
-    watcher.on("add", async (path) => {
-        if (firstBuild && !changedFiles.includes(path)) {
-            await buildRouter(config);
-            changedFiles.push(path);
-        }
-
-        firstBuild = false;
+    watcher.on("add", (filePath) => {
+        const relativePath = filePath.replace(projectDirectory, '');
+        scheduleBuild(`\x1b[33m+ ${relativePath}\x1b[0m`, filePath);
     });
 
-    watcher.on("unlink", async () => {
-        await buildRouter(config);
+    watcher.on("unlink", (filePath) => {
+        const relativePath = filePath.replace(projectDirectory, '');
+        scheduleBuild(`\x1b[31m- ${relativePath}\x1b[0m`, filePath);
     });
 
     let runtime_dir = __dirname + "/..";
