@@ -165,20 +165,33 @@ export default function AppLayout() {
 ## Configuration (aplos.config.js)
 
 ```javascript
-module.exports = {
+export default {
     // React configuration
     reactStrictMode: true,
-    
+
     // Server configuration
     server: {
         port: 3000,
     },
-    
+
+    // Head/Meta defaults
+    head: {
+        defaultTitle: 'My App',
+        titleTemplate: '%s | My App',
+        meta: [
+            { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+            { name: 'description', content: 'My awesome application' },
+        ],
+        link: [
+            { rel: 'icon', href: '/favicon.ico' },
+        ]
+    },
+
     // Client-side runtime configuration
     publicRuntimeConfig: {
         api_base_url: process.env.API_BASE_URL,
     },
-    
+
     // Routes configuration
     routes: {
         '/custom': {
@@ -206,6 +219,44 @@ function MyComponent() {
     return <div>API URL: {api_base_url}</div>;
 }
 ```
+
+### Head Configuration
+
+The `head` configuration allows you to set default meta tags, title, and links for your application.
+
+| Option | Description |
+|--------|-------------|
+| `defaultTitle` | Fallback title when no page defines one |
+| `titleTemplate` | Template for page titles (`%s` is replaced by page title) |
+| `meta` | Array of meta tags (viewport, description, etc.) |
+| `link` | Array of link tags (favicon, stylesheets, etc.) |
+
+### Using Head in Components
+
+You can override or add meta tags in any component using the `Head` component:
+
+```javascript
+import Head from 'aplos/head';
+
+export default function AboutPage() {
+    return (
+        <>
+            <Head>
+                <title>About Us</title>
+                <meta name="description" content="Learn more about our company" />
+            </Head>
+            <div>
+                <h1>About Us</h1>
+            </div>
+        </>
+    );
+}
+```
+
+**Behavior:**
+- Page `<title>` uses the `titleTemplate` from config (e.g., "About Us | My App")
+- Page meta tags override config defaults (e.g., description)
+- Config defaults are used when page doesn't define them (e.g., viewport)
 
 ### Route Configuration with Requirements
 
