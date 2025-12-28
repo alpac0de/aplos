@@ -133,6 +133,10 @@ export async function buildRouter(aplos) {
         template = template.replace('{/strictMode}', '');
     }
 
+    // Generate head defaults
+    const headDefaults = generateHeadDefaults(aplos.head || {});
+    template = template.replace('{headDefaults}', headDefaults);
+
     template = template.replace('{components}', components.join(''));
 
     // Ensure cache directory exists and write files
@@ -313,4 +317,50 @@ function buildNestedRoutes(pages, layoutTree) {
     
     // Wrap everything with AppLayout
     return `<Route element={<AppLayout />}>\n                    ${routesContent}\n                </Route>`;
+}
+
+/**
+ * Generate Helmet component with default head values
+ * @param {object} head - Head configuration
+ * @returns {string} - JSX string for Helmet component
+ */
+function generateHeadDefaults(head) {
+    const { defaultTitle, titleTemplate, meta = [], link = [] } = head;
+
+    // If no head config, return empty fragment
+    if (!defaultTitle && !titleTemplate && meta.length === 0 && link.length === 0) {
+        return '<></>';
+    }
+
+    const helmetProps = [];
+    if (defaultTitle) {
+        helmetProps.push(`defaultTitle="${defaultTitle}"`);
+    }
+    if (titleTemplate) {
+        helmetProps.push(`titleTemplate="${titleTemplate}"`);
+    }
+
+    const metaTags = meta.map(m => {
+        const attrs = Object.entries(m)
+            .map(([key, value]) => `${key}="${value}"`)
+            .join(' ');
+        return `                <meta ${attrs} />`;
+    }).join('\n');
+
+    const linkTags = link.map(l => {
+        const attrs = Object.entries(l)
+            .map(([key, value]) => `${key}="${value}"`)
+            .join(' ');
+        return `                <link ${attrs} />`;
+    }).join('\n');
+
+    const children = [metaTags, linkTags].filter(Boolean).join('\n');
+
+    if (helmetProps.length === 0 && !children) {
+        return '<></>';
+    }
+
+    return `<Helmet ${helmetProps.join(' ')}>
+${children}
+            </Helmet>`;
 }

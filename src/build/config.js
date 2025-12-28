@@ -18,6 +18,12 @@ export default async () => {
             port: process.env.APLOS_SERVER_PORT || 3000,
         },
         routes: [],
+        head: {
+            defaultTitle: '',
+            titleTemplate: '',
+            meta: [],
+            link: [],
+        },
     };
 
     const configPath = path.join(process.cwd(), 'aplos.config.js');
