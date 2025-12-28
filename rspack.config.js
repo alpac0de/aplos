@@ -72,7 +72,10 @@ export default {
               ["@babel/preset-react", { runtime: "automatic" }],
               "@babel/preset-typescript",
             ],
-            plugins: [["babel-plugin-react-compiler", {}]],
+            plugins: [
+              ["babel-plugin-react-compiler", {}],
+              isDevelopment && "react-refresh/babel",
+            ].filter(Boolean),
           },
         },
       },
