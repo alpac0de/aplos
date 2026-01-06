@@ -325,10 +325,10 @@ function buildNestedRoutes(pages, layoutTree) {
  * @returns {string} - JSX string for Helmet component
  */
 function generateHeadDefaults(head) {
-    const { defaultTitle, titleTemplate, meta = [], link = [] } = head;
+    const { defaultTitle, titleTemplate, meta = [], link = [], script = [] } = head;
 
     // If no head config, return empty fragment
-    if (!defaultTitle && !titleTemplate && meta.length === 0 && link.length === 0) {
+    if (!defaultTitle && !titleTemplate && meta.length === 0 && link.length === 0 && script.length === 0) {
         return '<></>';
     }
 
@@ -354,7 +354,19 @@ function generateHeadDefaults(head) {
         return `                <link ${attrs} />`;
     }).join('\n');
 
-    const children = [metaTags, linkTags].filter(Boolean).join('\n');
+    const scriptTags = script.map(s => {
+        const attrs = Object.entries(s)
+            .map(([key, value]) => {
+                if (typeof value === 'boolean' && value) {
+                    return key;
+                }
+                return `${key}="${value}"`;
+            })
+            .join(' ');
+        return `                <script ${attrs} />`;
+    }).join('\n');
+
+    const children = [metaTags, linkTags, scriptTags].filter(Boolean).join('\n');
 
     if (helmetProps.length === 0 && !children) {
         return '<></>';
