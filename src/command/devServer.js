@@ -114,7 +114,6 @@ export default async () => {
         }
 
         buildTimeout = setTimeout(async () => {
-            const changes = [...pendingChanges];
             pendingChanges = [];
             buildTimeout = null;
 
@@ -195,6 +194,13 @@ export default async () => {
         open: false,
         port: finalPort,
         historyApiFallback: true,
+        client: {
+            overlay: {
+                errors: true,
+                warnings: false,
+            },
+            logging: 'error',
+        },
         static: {
             directory: path.join(__dirname + "/../client/", "public"),
         },
