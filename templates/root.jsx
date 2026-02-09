@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 
 function NoMatch() {
-    return <div>Not found</div>
+    return {notFound};
 }
 
 function ErrorBoundary({ children }) {

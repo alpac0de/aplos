@@ -124,6 +124,25 @@ export async function buildRouter(aplos) {
         };\n`);
     }
 
+    // Check for custom 404 page (_404.tsx, _404.jsx, _404.js)
+    const notFoundFileName = '_404';
+    const notFoundFile = appExtensions
+        .map(ext => `${notFoundFileName}${ext}`)
+        .find(file => {
+            try {
+                return fs.existsSync(path.join(pageDirectory, file));
+            } catch (error) {
+                return false;
+            }
+        });
+
+    if (notFoundFile) {
+        components.push(`import CustomNotFound from "${projectDirectory}/src/pages/${notFoundFile}";\n`);
+        template = template.replace('{notFound}', '<CustomNotFound />');
+    } else {
+        template = template.replace('{notFound}', '<div>Not found</div>');
+    }
+
     if (aplos.reactStrictMode) {
         components.push('import { StrictMode } from "react"; ' + "\n");
         template = template.replace('{strictMode}', '<StrictMode>');
