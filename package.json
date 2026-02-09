@@ -72,8 +72,8 @@
     "react-router-dom": "^7.0.0"
   },
   "exports": {
-    "./config": "./src/components/config",
-    "./navigation": "./src/components/navigation",
-    "./head": "./src/components/head"
+    "./config": "./src/config.js",
+    "./navigation": "./src/components/navigation.jsx",
+    "./head": "./src/components/head.jsx"
   }
 }

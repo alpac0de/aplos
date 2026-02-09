@@ -117,7 +117,7 @@ export async function buildRouter(aplos) {
     if (appFile) {
         components.push(`import AppLayout from "${projectDirectory}/src/pages/${appFile}";\n`);
     } else {
-        components.push('import { Outlet } from "react-router-dom";')
+        components.push('import { Outlet } from "aplos/navigation";')
         components.push(`
         const AppLayout = () => {
             return <Outlet />;
