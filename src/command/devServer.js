@@ -8,10 +8,52 @@ import get_config from "../build/config.js";
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 import net from 'net';
+import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
+
+const getNetworkUrl = (port) => {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                return `http://${iface.address}:${port}`;
+            }
+        }
+    }
+    return null;
+};
+
+const detectFeatures = (projectDirectory) => {
+    const features = [];
+    const hasTsConfig = fs.existsSync(path.join(projectDirectory, 'tsconfig.json'));
+    const hasPostcss = fs.existsSync(path.join(projectDirectory, 'postcss.config.js'))
+        || fs.existsSync(path.join(projectDirectory, 'postcss.config.cjs'));
+
+    if (hasTsConfig) features.push('TypeScript');
+    if (hasPostcss) features.push('PostCSS');
+    features.push('React Compiler');
+    features.push('HMR');
+
+    return features;
+};
+
+const printStartupMessage = (port, projectDirectory, readyTime) => {
+    const networkUrl = getNetworkUrl(port);
+    const features = detectFeatures(projectDirectory);
+
+    console.log();
+    console.log('  \x1b[1m\x1b[36mAPLOS\x1b[0m \x1b[2mv0.0.1\x1b[0m  \x1b[32mready in ' + readyTime + 'ms\x1b[0m');
+    console.log();
+    console.log(`  \x1b[1mLocal:\x1b[0m   http://localhost:${port}/`);
+    if (networkUrl) {
+        console.log(`  \x1b[1mNetwork:\x1b[0m ${networkUrl}/`);
+    }
+    console.log(`  \x1b[2m${features.join(' | ')}\x1b[0m`);
+    console.log();
+};
 
 // Function to check if port is available
 const isPortAvailable = (port) => {
@@ -123,14 +165,11 @@ export default async () => {
     const compiler = rspack(rspackConfig);
 
     let isFirstCompilation = true;
-    compiler.hooks.done.tap('aplos-build-time', (stats) => {
-        const time = stats.endTime - stats.startTime;
+    compiler.hooks.done.tap('aplos-startup', () => {
         if (isFirstCompilation) {
-            const totalTime = Math.round(performance.now() - buildStart);
-            console.log(`\n  Ready in ${totalTime}ms`);
+            const readyTime = Math.round(performance.now() - buildStart);
+            printStartupMessage(finalPort, projectDirectory, readyTime);
             isFirstCompilation = false;
-        } else {
-            console.log(`\n  Compiled in ${time}ms`);
         }
     });
 
@@ -163,7 +202,6 @@ export default async () => {
     const server = new RspackDevServer(devServerOptions, compiler);
 
     const runServer = async () => {
-        console.log(`Starting server on port ${finalPort}...`);
         await server.start();
     };
 

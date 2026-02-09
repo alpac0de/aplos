@@ -11,6 +11,17 @@ const __dirname = path.dirname(__filename);
 const isDevelopment = process.env.NODE_ENV !== "production";
 const projectDirectory = process.cwd();
 
+// Determine HTML template path
+// Priority: 1. public/index.html (user override), 2. default template
+const defaultTemplate = path.resolve(__dirname, "./src/client/public/index.html");
+const userTemplate = path.resolve(projectDirectory, "public/index.html");
+
+let htmlTemplate = defaultTemplate;
+if (fs.existsSync(userTemplate)) {
+  htmlTemplate = userTemplate;
+  console.log("Using custom HTML template from public/index.html");
+}
+
 // Load configuration to get head meta tags
 let headConfig = { meta: [], link: [], script: [] };
 const configPath = path.join(projectDirectory, 'aplos.config.js');
@@ -107,7 +118,7 @@ class InjectHeadTagsPlugin {
 
 const plugins = [
   new HtmlRspackPlugin({
-    template: path.resolve(__dirname, "./src/client/public/index.html"),
+    template: htmlTemplate,
     minify: !isDevelopment,
   }),
   new InjectHeadTagsPlugin(headConfig),
@@ -124,6 +135,10 @@ if (isDevelopment) {
 export default {
   mode: isDevelopment ? "development" : "production",
   devtool: isDevelopment ? "eval-source-map" : "source-map",
+  stats: isDevelopment ? 'none' : 'normal',
+  infrastructureLogging: {
+    level: isDevelopment ? 'error' : 'info',
+  },
   optimization: {
     minimize: !isDevelopment,
     splitChunks: !isDevelopment
