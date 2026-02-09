@@ -143,6 +143,25 @@ export async function buildRouter(aplos) {
         template = template.replace('{notFound}', '<div>Not found</div>');
     }
 
+    // Check for custom error page (_error.tsx, _error.jsx, _error.js)
+    const errorFileName = '_error';
+    const errorFile = appExtensions
+        .map(ext => `${errorFileName}${ext}`)
+        .find(file => {
+            try {
+                return fs.existsSync(path.join(pageDirectory, file));
+            } catch (error) {
+                return false;
+            }
+        });
+
+    if (errorFile) {
+        components.push(`import CustomError from "${projectDirectory}/src/pages/${errorFile}";\n`);
+        template = template.replace('{errorComponent}', '<CustomError error={error} />');
+    } else {
+        template = template.replace('{errorComponent}', '<DefaultErrorPage error={error} />');
+    }
+
     if (aplos.reactStrictMode) {
         components.push('import { StrictMode } from "react"; ' + "\n");
         template = template.replace('{strictMode}', '<StrictMode>');
