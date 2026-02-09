@@ -69,6 +69,7 @@ export default async (options) => {
     if (matchedRoute) {
       table.push(["Route Name", matchedRoute.component]);
       table.push(["Path", matchedRoute.path]);
+      table.push(["File", matchedRoute.file ? `src/pages${matchedRoute.file}` : "-"]);
       const regexPattern = matchedRoute.path.replace(/\//g, '\\/').replace(/:([^/]+)/g, '(?P<$1>[^/]++)');
       table.push(["Path Regex", `{^${regexPattern}$}`]);
       table.push(["Host", "ANY"]);
@@ -109,6 +110,8 @@ export default async (options) => {
 
       table.push(["Path", route.path]);
 
+      table.push(["File", route.file ? `src/pages${route.file}` : "-"]);
+
       table.push(["Path Regex", ""]);
 
       table.push(["Host", ""]);
@@ -123,11 +126,11 @@ export default async (options) => {
     }
   } else {
     const table = new Table({
-      head: ["Component", "Scheme", "Host", "Path"],
+      head: ["Component", "File", "Scheme", "Host", "Path"],
     });
 
     routes.map((route) => {
-      table.push([route.component, "Any", "Any", route.path]);
+      table.push([route.component, route.file ? `src/pages${route.file}` : "-", "Any", "Any", route.path]);
     });
     console.log(table.toString());
   }
