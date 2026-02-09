@@ -89,6 +89,7 @@ export default async () => {
     // Initial build
     const startTime = Date.now();
     console.log('\x1b[36m⚡ Building routes...\x1b[0m');
+    const buildStart = performance.now();
     await buildRouter(config);
     console.log(`\x1b[32m✓ Ready in ${Date.now() - startTime}ms\x1b[0m`);
 
@@ -120,7 +121,19 @@ export default async () => {
     rspackConfig.entry = [projectDirectory + "/.aplos/cache/app.js"];
 
     const compiler = rspack(rspackConfig);
-    
+
+    let isFirstCompilation = true;
+    compiler.hooks.done.tap('aplos-build-time', (stats) => {
+        const time = stats.endTime - stats.startTime;
+        if (isFirstCompilation) {
+            const totalTime = Math.round(performance.now() - buildStart);
+            console.log(`\n  Ready in ${totalTime}ms`);
+            isFirstCompilation = false;
+        } else {
+            console.log(`\n  Compiled in ${time}ms`);
+        }
+    });
+
     // Determine port logic based on environment variable
     let finalPort = config.server.port;
     const isPortExplicitlySet = process.env.APLOS_SERVER_PORT;

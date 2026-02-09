@@ -64,6 +64,7 @@ export default async (options) => {
     let runtime_dir = __dirname + "/..";
     let node_modules = projectDirectory + "/node_modules";
 
+    const buildStart = performance.now();
     await buildRouter(await get_config(projectDirectory));
 
     const rspack = spawn(node_modules + "/.bin/rspack", [
@@ -84,6 +85,9 @@ export default async (options) => {
         if (code !== 0) {
             console.log(`error: Process exited with code ${code}`);
         } else {
+            const totalTime = Math.round(performance.now() - buildStart);
+            console.log(`\n  Built in ${totalTime}ms`);
+
             // Show build analysis in production
             if (options.mode === 'production' || process.env.NODE_ENV === 'production') {
                 showBundleAnalysis(projectDirectory);
