@@ -175,7 +175,7 @@ export default {
     rules: [
       {
         test: /\.(js|ts|jsx|tsx)$/,
-        exclude: /node_modules\/(?!aplos)|bower_components/,
+        exclude: /node_modules\/(?!aplos)|bower_components|\.aplos[\\/]cache/,
         use: {
           loader: "babel-loader",
           options: {
