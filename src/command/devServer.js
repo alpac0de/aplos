@@ -201,9 +201,10 @@ export default async () => {
             },
             logging: 'error',
         },
-        static: {
-            directory: path.join(__dirname + "/../client/", "public"),
-        },
+        static: [
+            { directory: path.join(projectDirectory, "public") },
+            { directory: path.join(__dirname + "/../client/", "public") },
+        ],
     };
     const server = new RspackDevServer(devServerOptions, compiler);
 

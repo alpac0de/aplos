@@ -1,5 +1,5 @@
 import path from "path";
-import { HtmlRspackPlugin, CssExtractRspackPlugin } from "@rspack/core";
+import { HtmlRspackPlugin, CssExtractRspackPlugin, CopyRspackPlugin } from "@rspack/core";
 import ReactRefreshPlugin from "@rspack/plugin-react-refresh";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -130,6 +130,23 @@ const plugins = [
 
 if (isDevelopment) {
   plugins.push(new ReactRefreshPlugin());
+}
+
+const userPublicDir = path.resolve(projectDirectory, "public");
+if (!isDevelopment && fs.existsSync(userPublicDir)) {
+  plugins.push(
+    new CopyRspackPlugin({
+      patterns: [
+        {
+          from: userPublicDir,
+          to: path.resolve(projectDirectory, "./public/dist"),
+          globOptions: {
+            ignore: ["**/dist/**", "**/index.html"],
+          },
+        },
+      ],
+    })
+  );
 }
 
 export default {
