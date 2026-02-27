@@ -1,5 +1,15 @@
 #!/usr/bin/env node
 
+import { config } from "dotenv";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
+const projectDir = process.cwd();
+config({ path: resolve(projectDir, ".env") });
+if (existsSync(resolve(projectDir, ".env.local"))) {
+  config({ path: resolve(projectDir, ".env.local"), override: true });
+}
+
 import { Command } from "commander";
 import devServer from "../src/command/devServer.js";
 import build from "../src/command/build.js";

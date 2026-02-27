@@ -48,6 +48,7 @@
     "cli-table3": "^0.6.5",
     "commander": "^14.0.0",
     "css-loader": "^7.1.2",
+    "dotenv": "^17.3.1",
     "glob": "^11.0.3",
     "postcss": "^8.5.6",
     "postcss-nested": "^7.0.2",
