@@ -159,7 +159,7 @@ export default async () => {
 
     const { default: rspackConfig } = await import(runtime_dir + "/../rspack.config.js");
     rspackConfig.mode = "development";
-    rspackConfig.entry = [projectDirectory + "/.aplos/cache/app.js"];
+    rspackConfig.entry = [runtime_dir + "/runtime/app.jsx"];
 
     const compiler = rspack(rspackConfig);
 

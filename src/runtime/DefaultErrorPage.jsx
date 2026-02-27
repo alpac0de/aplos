@@ -1,18 +1,4 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
-{components}
-import {
-    Routes,
-    BrowserRouter,
-    Route
-} from "react-router-dom";
-
-function NoMatch() {
-    return {notFound};
-}
-
-function DefaultErrorPage({ error }) {
+export default function DefaultErrorPage({ error }) {
     const isDevelopment = process.env.NODE_ENV === 'development';
 
     if (isDevelopment) {
@@ -88,62 +74,3 @@ function DefaultErrorPage({ error }) {
         </div>
     );
 }
-
-function ErrorBoundary({ children }) {
-    const [hasError, setHasError] = React.useState(false);
-    const [error, setError] = React.useState(null);
-
-    React.useEffect(() => {
-        const handleError = (error, errorInfo) => {
-            setHasError(true);
-            setError(error);
-            
-            // Log error in development
-            if (process.env.NODE_ENV === 'development') {
-                console.error('Error caught by boundary:', error, errorInfo);
-            }
-        };
-
-        // Modern error catching with ErrorEvent
-        const handleGlobalError = (event) => {
-            handleError(event.error, { componentStack: event.error?.stack });
-        };
-
-        const handleUnhandledRejection = (event) => {
-            handleError(event.reason, { componentStack: event.reason?.stack });
-        };
-
-        window.addEventListener('error', handleGlobalError);
-        window.addEventListener('unhandledrejection', handleUnhandledRejection);
-
-        return () => {
-            window.removeEventListener('error', handleGlobalError);
-            window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-        };
-    }, []);
-
-    if (hasError) {
-        return {errorComponent};
-    }
-
-    return children;
-}
-
-function App() {
-    return (
-        <HelmetProvider>
-            {headDefaults}
-            <ErrorBoundary>
-                <BrowserRouter>
-                    <Routes>
-                        {routes}
-                    </Routes>
-                </BrowserRouter>
-            </ErrorBoundary>
-        </HelmetProvider>
-    );
-}
-
-const container = document.getElementById('root');
-const root = createRoot(container);
-root.render({strictMode}<App />{/strictMode});

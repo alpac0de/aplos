@@ -70,7 +70,7 @@ export default async (options) => {
     const rspack = spawn(node_modules + "/.bin/rspack", [
         "--mode=" + options.mode,
         "--config", runtime_dir + "/../rspack.config.js",
-        "--entry", projectDirectory + "/.aplos/cache/app.js"
+        "--entry", runtime_dir + "/runtime/app.jsx"
     ]);
 
     rspack.stdout.on('data', (data) => {

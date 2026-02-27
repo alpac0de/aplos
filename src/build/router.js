@@ -84,98 +84,52 @@ export async function buildRouter(aplos) {
         }
     });
 
-    // Build nested route structure
-    const nestedRoutes = buildNestedRoutes(pages, layoutTree);
+    // Detect _app, _404, _error files
+    const appFile = findSpecialFile(pageDirectory, '_app', appExtensions);
+    const notFoundFile = findSpecialFile(pageDirectory, '_404', appExtensions);
+    const errorFile = findSpecialFile(pageDirectory, '_error', appExtensions);
 
-    let template = fs.readFileSync(__dirname + "/../../templates/root.jsx").toString();
-
-    template = template.replace('{routes}', nestedRoutes);
-
-    let components = pages.map((route) => {
-        const componentFileName = route.file.replace('~', '');
-
-        return `import ${route.component} from "${projectDirectory}/src/pages${componentFileName}";\n`;
-    })
-
-    // Add layout imports
-    layoutTree.forEach((layout) => {
-        components.push(`import ${layout.component} from "${projectDirectory}/src/pages/${layout.file}";\n`);
+    // Generate pages.js (re-exports for all pages + special files)
+    const pagesExports = [];
+    pages.forEach(page => {
+        const componentFileName = page.file.replace('~', '');
+        pagesExports.push(`export { default as ${page.component} } from "${projectDirectory}/src/pages${componentFileName}";`);
     });
 
-    const appFileName = '_app';
-    const appFile = appExtensions
-        .map(ext => `${appFileName}${ext}`)
-        .find(file => {
-            try {
-                return fs.existsSync(path.join(pageDirectory, file));
-            } catch (error) {
-                console.warn(`Error checking for ${file}:`, error.message);
-                return false;
-            }
-        });
+    // Layout exports
+    layoutTree.forEach(layout => {
+        pagesExports.push(`export { default as ${layout.component} } from "${projectDirectory}/src/pages/${layout.file}";`);
+    });
 
+    // AppLayout
     if (appFile) {
-        components.push(`import AppLayout from "${projectDirectory}/src/pages/${appFile}";\n`);
+        pagesExports.push(`export { default as AppLayout } from "${projectDirectory}/src/pages/${appFile}";`);
     } else {
-        components.push('import { Outlet } from "aplos/navigation";')
-        components.push(`
-        const AppLayout = () => {
-            return <Outlet />;
-        };\n`);
+        pagesExports.push(`export { default as AppLayout } from "aplos/internal/passthrough-layout";`);
     }
 
-    // Check for custom 404 page (_404.tsx, _404.jsx, _404.js)
-    const notFoundFileName = '_404';
-    const notFoundFile = appExtensions
-        .map(ext => `${notFoundFileName}${ext}`)
-        .find(file => {
-            try {
-                return fs.existsSync(path.join(pageDirectory, file));
-            } catch (error) {
-                return false;
-            }
-        });
-
+    // NoMatch (404)
     if (notFoundFile) {
-        components.push(`import CustomNotFound from "${projectDirectory}/src/pages/${notFoundFile}";\n`);
-        template = template.replace('{notFound}', '<CustomNotFound />');
+        pagesExports.push(`export { default as NoMatch } from "${projectDirectory}/src/pages/${notFoundFile}";`);
     } else {
-        template = template.replace('{notFound}', '<div>Not found</div>');
+        pagesExports.push(`export { default as NoMatch } from "aplos/internal/default-not-found";`);
     }
 
-    // Check for custom error page (_error.tsx, _error.jsx, _error.js)
-    const errorFileName = '_error';
-    const errorFile = appExtensions
-        .map(ext => `${errorFileName}${ext}`)
-        .find(file => {
-            try {
-                return fs.existsSync(path.join(pageDirectory, file));
-            } catch (error) {
-                return false;
-            }
-        });
-
+    // CustomError (optional)
     if (errorFile) {
-        components.push(`import CustomError from "${projectDirectory}/src/pages/${errorFile}";\n`);
-        template = template.replace('{errorComponent}', '<CustomError error={error} />');
+        pagesExports.push(`export { default as CustomError } from "${projectDirectory}/src/pages/${errorFile}";`);
     } else {
-        template = template.replace('{errorComponent}', '<DefaultErrorPage error={error} />');
+        pagesExports.push(`export const CustomError = null;`);
     }
 
-    if (aplos.reactStrictMode) {
-        components.push('import { StrictMode } from "react"; ' + "\n");
-        template = template.replace('{strictMode}', '<StrictMode>');
-        template = template.replace('{/strictMode}', '</StrictMode>');
-    } else {
-        template = template.replace('{strictMode}', '');
-        template = template.replace('{/strictMode}', '');
-    }
+    // Build nested route tree as JS data
+    const nestedRoutes = buildNestedRoutes(pages, layoutTree);
 
-    // Generate head defaults
-    const headDefaults = generateHeadDefaults(aplos.head || {});
-    template = template.replace('{headDefaults}', headDefaults);
+    // Generate routes.js
+    const routesFileContent = generateRoutesFile(nestedRoutes);
 
-    template = template.replace('{components}', components.join(''));
+    // Generate head.js
+    const headFileContent = generateHeadFile(aplos.head || {}, aplos.reactStrictMode);
 
     // Ensure cache directory exists and write files
     try {
@@ -187,8 +141,16 @@ export async function buildRouter(aplos) {
             JSON.stringify(routes)
         );
         await fs.promises.writeFile(
-            path.join(cacheDir, 'app.js'),
-            template
+            path.join(cacheDir, 'pages.js'),
+            pagesExports.join('\n') + '\n'
+        );
+        await fs.promises.writeFile(
+            path.join(cacheDir, 'routes.js'),
+            routesFileContent
+        );
+        await fs.promises.writeFile(
+            path.join(cacheDir, 'head.js'),
+            headFileContent
         );
         await fs.promises.writeFile(
             path.join(cacheDir, 'config.js'),
@@ -198,6 +160,83 @@ export async function buildRouter(aplos) {
         console.error('Failed to write cache files:', error.message);
         throw error;
     }
+}
+
+/**
+ * Find a special file (_app, _404, _error) in the pages directory
+ */
+function findSpecialFile(pageDirectory, baseName, extensions) {
+    return extensions
+        .map(ext => `${baseName}${ext}`)
+        .find(file => {
+            try {
+                return fs.existsSync(path.join(pageDirectory, file));
+            } catch (error) {
+                return false;
+            }
+        }) || null;
+}
+
+/**
+ * Generate routes.js content — pure JS, no JSX
+ */
+function generateRoutesFile(routeTree) {
+    const names = collectComponentNames(routeTree);
+    const lines = [];
+    lines.push(`import { ${names.join(', ')} } from './pages.js';`);
+    lines.push('');
+    lines.push(`export const routeTree = ${serializeRouteTree(routeTree)};`);
+    return lines.join('\n') + '\n';
+}
+
+/**
+ * Collect all component names referenced in the route tree
+ */
+function collectComponentNames(nodes) {
+    const names = new Set();
+    function walk(nodes) {
+        for (const node of nodes) {
+            if (node.component) names.add(node.component);
+            if (node.children) walk(node.children);
+        }
+    }
+    walk(nodes);
+    return Array.from(names);
+}
+
+/**
+ * Serialize route tree to JS source (references to imported components, not strings)
+ */
+function serializeRouteTree(nodes, indent = '') {
+    const inner = indent + '  ';
+    const items = nodes.map(node => {
+        const parts = [];
+        if (node.component) parts.push(`${inner}element: ${node.component}`);
+        if (node.path !== undefined) parts.push(`${inner}path: ${JSON.stringify(node.path)}`);
+        if (node.children) {
+            parts.push(`${inner}children: ${serializeRouteTree(node.children, inner)}`);
+        }
+        return `${indent}{\n${parts.join(',\n')}\n${indent}}`;
+    });
+    return `[\n${items.join(',\n')}\n${indent}]`;
+}
+
+/**
+ * Generate head.js content — pure JS
+ */
+function generateHeadFile(head, reactStrictMode) {
+    const { defaultTitle, titleTemplate, meta = [], link = [], script = [] } = head;
+    const headObj = {};
+    if (defaultTitle) headObj.defaultTitle = defaultTitle;
+    if (titleTemplate) headObj.titleTemplate = titleTemplate;
+    if (meta.length > 0) headObj.meta = meta;
+    if (link.length > 0) headObj.link = link;
+    if (script.length > 0) headObj.script = script;
+
+    const lines = [];
+    lines.push(`export default ${JSON.stringify(headObj, null, 2)};`);
+    lines.push(`export const reactStrictMode = ${!!reactStrictMode};`);
+    return lines.join('\n') + '\n';
 }
 
 /**
@@ -292,9 +331,10 @@ function buildLayoutTree(pageDirectory, extensions) {
 
 /**
  * Build nested route structure with layouts
+ * Returns a JS array (data) instead of JSX strings
  * @param {Array} pages
  * @param {Map} layoutTree
- * @returns {string}
+ * @returns {Array}
  */
 function buildNestedRoutes(pages, layoutTree) {
     // Group pages by their directory path
@@ -320,15 +360,13 @@ function buildNestedRoutes(pages, layoutTree) {
         routesByPath.get(layoutPath).push(page);
     });
 
-    // Build nested JSX structure
-    function buildRouteLevel(currentPath = '/', level = 0) {
-        const indent = '                '.repeat(level + 1);
-        let routes = '';
+    function buildRouteLevel(currentPath = '/') {
+        const nodes = [];
 
         // Add pages for this level
         const pagesAtLevel = routesByPath.get(currentPath) || [];
         pagesAtLevel.forEach(page => {
-            routes += `${indent}<Route path="${page.path}" element={<${page.component} />} />\n`;
+            nodes.push({ path: page.path, component: page.component });
         });
 
         // Add nested layouts
@@ -336,81 +374,23 @@ function buildNestedRoutes(pages, layoutTree) {
             .filter(layoutPath => layoutPath.startsWith(currentPath) && layoutPath !== currentPath)
             .forEach(layoutPath => {
                 const layout = layoutTree.get(layoutPath);
-                routes += `${indent}<Route element={<${layout.component} />}>\n`;
-                routes += buildRouteLevel(layoutPath, level + 1);
-                routes += `${indent}</Route>\n`;
+                nodes.push({
+                    component: layout.component,
+                    children: buildRouteLevel(layoutPath)
+                });
             });
 
-        return routes;
+        return nodes;
     }
 
-    // Start with app layout wrapping everything
-    let routesContent = buildRouteLevel() + '                    <Route path="*" element={<NoMatch />} />';
-    
+    let innerRoutes = buildRouteLevel();
+
     // Wrap with root layout if exists
     if (layoutTree.has('/')) {
         const rootLayout = layoutTree.get('/');
-        routesContent = `<Route element={<${rootLayout.component} />}>\n${routesContent}\n                </Route>`;
+        innerRoutes = [{ component: rootLayout.component, children: innerRoutes }];
     }
-    
+
     // Wrap everything with AppLayout
-    return `<Route element={<AppLayout />}>\n                    ${routesContent}\n                </Route>`;
-}
-
-/**
- * Generate Helmet component with default head values
- * @param {object} head - Head configuration
- * @returns {string} - JSX string for Helmet component
- */
-function generateHeadDefaults(head) {
-    const { defaultTitle, titleTemplate, meta = [], link = [], script = [] } = head;
-
-    // If no head config, return empty fragment
-    if (!defaultTitle && !titleTemplate && meta.length === 0 && link.length === 0 && script.length === 0) {
-        return '<></>';
-    }
-
-    const helmetProps = [];
-    if (defaultTitle) {
-        helmetProps.push(`defaultTitle="${defaultTitle}"`);
-    }
-    if (titleTemplate) {
-        helmetProps.push(`titleTemplate="${titleTemplate}"`);
-    }
-
-    const metaTags = meta.map(m => {
-        const attrs = Object.entries(m)
-            .map(([key, value]) => `${key}="${value}"`)
-            .join(' ');
-        return `                <meta ${attrs} />`;
-    }).join('\n');
-
-    const linkTags = link.map(l => {
-        const attrs = Object.entries(l)
-            .map(([key, value]) => `${key}="${value}"`)
-            .join(' ');
-        return `                <link ${attrs} />`;
-    }).join('\n');
-
-    const scriptTags = script.map(s => {
-        const attrs = Object.entries(s)
-            .map(([key, value]) => {
-                if (typeof value === 'boolean' && value) {
-                    return key;
-                }
-                return `${key}="${value}"`;
-            })
-            .join(' ');
-        return `                <script ${attrs} />`;
-    }).join('\n');
-
-    const children = [metaTags, linkTags, scriptTags].filter(Boolean).join('\n');
-
-    if (helmetProps.length === 0 && !children) {
-        return '<></>';
-    }
-
-    return `<Helmet ${helmetProps.join(' ')}>
-${children}
-            </Helmet>`;
+    return [{ component: 'AppLayout', children: innerRoutes }];
 }
