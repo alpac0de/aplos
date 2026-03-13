@@ -219,7 +219,6 @@ export default {
       // Force single React instance (avoid duplicate React in linked packages)
       "react": path.resolve(projectDirectory, "node_modules/react"),
       "react-dom": path.resolve(projectDirectory, "node_modules/react-dom"),
-      "react-helmet-async": path.resolve(projectDirectory, "node_modules/react-helmet-async"),
       "aplos/config": path.resolve(__dirname, "src/config.js"),
       "aplos/navigation": path.resolve(
         __dirname,

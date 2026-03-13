@@ -52,7 +52,6 @@
     "glob": "^11.0.3",
     "postcss": "^8.5.6",
     "postcss-nested": "^7.0.2",
-    "react-helmet-async": "^2.0.5",
     "react-refresh": "^0.16.0",
     "style-loader": "^4.0.0",
     "typescript": "^5.9.3"

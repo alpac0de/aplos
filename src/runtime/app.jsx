@@ -1,6 +1,5 @@
-import React, { createElement } from 'react';
+import React, { createElement, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { Routes, BrowserRouter, Route } from 'react-router-dom';
 
 import { routeTree } from '@aplos_routes';
@@ -9,6 +8,8 @@ import headConfig, { reactStrictMode } from '@aplos_head';
 
 import ErrorBoundary from './ErrorBoundary.jsx';
 import DefaultErrorPage from './DefaultErrorPage.jsx';
+
+const MANAGED_ATTR = "data-head-default";
 
 function renderRoutes(nodes) {
     return nodes.map((node, i) => {
@@ -24,32 +25,64 @@ function renderRoutes(nodes) {
 }
 
 function HeadDefaults() {
-    if (!headConfig) return null;
+    useEffect(() => {
+        if (!headConfig) return;
 
-    const { defaultTitle, titleTemplate, meta = [], link = [], script = [] } = headConfig;
+        const { defaultTitle, meta = [], link = [], script = [] } = headConfig;
 
-    if (!defaultTitle && !titleTemplate && meta.length === 0 && link.length === 0 && script.length === 0) {
-        return null;
-    }
+        if (defaultTitle) {
+            document.title = defaultTitle;
+        }
 
-    const helmetProps = {};
-    if (defaultTitle) helmetProps.defaultTitle = defaultTitle;
-    if (titleTemplate) helmetProps.titleTemplate = titleTemplate;
+        const elements = [];
 
-    return (
-        <Helmet {...helmetProps}>
-            {meta.map((m, i) => <meta key={i} {...m} />)}
-            {link.map((l, i) => <link key={i} {...l} />)}
-            {script.map((s, i) => <script key={i} {...s} />)}
-        </Helmet>
-    );
+        meta.forEach((m) => {
+            const el = document.createElement('meta');
+            Object.entries(m).forEach(([key, value]) => el.setAttribute(key, value));
+            el.setAttribute(MANAGED_ATTR, 'true');
+            document.head.appendChild(el);
+            elements.push(el);
+        });
+
+        link.forEach((l) => {
+            const el = document.createElement('link');
+            Object.entries(l).forEach(([key, value]) => el.setAttribute(key, value));
+            el.setAttribute(MANAGED_ATTR, 'true');
+            document.head.appendChild(el);
+            elements.push(el);
+        });
+
+        script.forEach((s) => {
+            const el = document.createElement('script');
+            Object.entries(s).forEach(([key, value]) => {
+                if (key === 'innerHTML') {
+                    el.textContent = value;
+                } else if (typeof value === 'boolean') {
+                    if (value) el.setAttribute(key, '');
+                } else {
+                    el.setAttribute(key, value);
+                }
+            });
+            el.setAttribute(MANAGED_ATTR, 'true');
+            document.head.appendChild(el);
+            elements.push(el);
+        });
+
+        return () => {
+            elements.forEach((el) => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            });
+        };
+    }, []);
+
+    return null;
 }
 
 function App() {
     const ErrorComponent = CustomError || DefaultErrorPage;
 
     return (
-        <HelmetProvider>
+        <>
             <HeadDefaults />
             <ErrorBoundary errorComponent={ErrorComponent}>
                 <BrowserRouter>
@@ -59,7 +92,7 @@ function App() {
                     </Routes>
                 </BrowserRouter>
             </ErrorBoundary>
-        </HelmetProvider>
+        </>
     );
 }
 
