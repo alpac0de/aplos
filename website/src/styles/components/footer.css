@@ -11,6 +11,15 @@
     justify-content: space-between;
     color: var(--color-text-muted);
     font-size: var(--text-sm);
+
+    a {
+      color: var(--color-text-secondary);
+      transition: color var(--transition-fast);
+
+      &:hover {
+        color: var(--color-text);
+      }
+    }
   }
 
   .footer-links {
