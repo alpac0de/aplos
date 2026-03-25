@@ -23,6 +23,8 @@ const sections = [
     title: 'Configuration',
     links: [
       { to: '/documentation/configuration', label: 'Overview' },
+      { to: '/documentation/configuration/rspack', label: 'Custom Rspack Config' },
+      { to: '/documentation/configuration/runtime', label: 'Runtime Configuration' },
     ],
   },
   {

@@ -9,6 +9,8 @@ const PATH_MAP: Record<string, { file: string; title: string }> = {
   'routing/layouts': { file: 'routing/layouts.md', title: 'Layouts' },
   'routing/dynamic-routes': { file: 'routing/dynamic-routes.md', title: 'Dynamic Routes' },
   'configuration': { file: 'configuration/overview.md', title: 'Configuration' },
+  'configuration/rspack': { file: 'configuration/rspack.md', title: 'Custom Rspack Config' },
+  'configuration/runtime': { file: 'configuration/runtime.md', title: 'Runtime Configuration' },
   'cli': { file: 'cli/commands.md', title: 'CLI Commands' },
   'api': { file: 'api/components.md', title: 'API Reference' },
 };
