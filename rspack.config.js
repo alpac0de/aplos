@@ -214,11 +214,20 @@ export default {
       },
     ],
   },
+  resolveLoader: {
+    modules: [
+      path.resolve(projectDirectory, "node_modules"),
+      path.resolve(__dirname, "node_modules"),
+      "node_modules",
+    ],
+  },
   resolve: {
     alias: {
-      // Force single React instance (avoid duplicate React in linked packages)
+      // Force single instance (avoid duplicates when framework != project dir)
       "react": path.resolve(projectDirectory, "node_modules/react"),
       "react-dom": path.resolve(projectDirectory, "node_modules/react-dom"),
+      "react-router-dom": path.resolve(projectDirectory, "node_modules/react-router-dom"),
+      "react-router": path.resolve(projectDirectory, "node_modules/react-router"),
       "aplos/config": path.resolve(__dirname, "src/config.js"),
       "aplos/navigation": path.resolve(
         __dirname,
