@@ -68,6 +68,7 @@ export async function buildRouter(aplos) {
             path = found.destination;
         }
 
+        path = path.replace(/\[\.\.\..*?]/g, '*');
         path = path.replace(/\[(.*?)]/g, ':$1');
 
         let existingPage = pages.find(p => p.path === path);
@@ -268,7 +269,7 @@ export async function getFiles(dirPath, extensions) {
  * @returns {string}
  */
 export function formatPath(path) {
-    return path.replace(/[\[\]_-]/g, '');
+    return path.replace(/\.\.\./g, '').replace(/[\[\]_-]/g, '');
 }
 
 /**
