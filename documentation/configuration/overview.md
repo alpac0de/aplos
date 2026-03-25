@@ -15,6 +15,15 @@ module.exports = {
     port: 3000,
   },
 
+  // Head/Meta defaults
+  head: {
+    defaultTitle: 'My App',
+    titleTemplate: '%s | My App',
+    meta: [
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+    ],
+  },
+
   // Client-side runtime configuration
   publicRuntimeConfig: {
     api_base_url: process.env.API_BASE_URL,
@@ -98,6 +107,39 @@ Or using environment variable:
 ```bash
 APLOS_SERVER_PORT=4000 npx aplos server
 ```
+
+## Head Configuration
+
+The `head` option sets default meta tags, title, and links injected into every page.
+
+```javascript
+export default {
+  head: {
+    defaultTitle: 'My App',
+    titleTemplate: '%s | My App',
+    meta: [
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { name: 'description', content: 'My awesome application' },
+    ],
+    link: [
+      { rel: 'icon', href: '/favicon.ico' },
+    ],
+    script: [
+      { src: 'https://example.com/analytics.js', async: true },
+    ],
+  }
+}
+```
+
+| Option | Description |
+|--------|-------------|
+| `defaultTitle` | Fallback title when no page defines one |
+| `titleTemplate` | Template for page titles (`%s` is replaced by the page title) |
+| `meta` | Array of meta tag attributes |
+| `link` | Array of link tag attributes |
+| `script` | Array of script tag attributes |
+
+You can override head tags per-page using the `Head` component. See [API Reference](../api/components.md#head) for details.
 
 ## Routes Configuration
 

@@ -63,7 +63,8 @@ docs/
 │   └── layouts.md                # Layouts system
 ├── configuration/
 │   ├── overview.md               # Configuration overview
-│   └── runtime.md                # Runtime configuration
+│   ├── runtime.md                # Runtime configuration
+│   └── rspack.md                 # Custom rspack configuration
 ├── cli/
 │   └── commands.md               # CLI commands reference
 └── api/

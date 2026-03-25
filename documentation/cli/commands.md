@@ -16,6 +16,9 @@ npx aplos server
 - Environment variables support
 - On-the-fly compilation
 - Default port: 3000 (configurable)
+- Automatic port fallback: if the configured port is busy, finds the next available one (unless `APLOS_SERVER_PORT` is explicitly set)
+- Network URL display: shows both `localhost` and LAN IP for testing on other devices
+- Feature detection: displays enabled features on startup (TypeScript, PostCSS, React Compiler, HMR)
 
 **Configuration:**
 
@@ -48,6 +51,7 @@ npx aplos build
 - Tree shaking
 - Static route generation
 - Output directory: `public/dist`
+- Bundle analysis: displays a size breakdown of generated JS files after production builds, with performance tips
 
 **Options:**
 

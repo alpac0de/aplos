@@ -48,6 +48,59 @@ export default function Article() {
 }
 ```
 
+## Catch-All Routes
+
+Catch-all routes match any number of nested path segments using the `[...param]` syntax:
+
+```
+src/pages/
+  └── documentation/
+      └── [...path].tsx   -> /documentation/getting-started
+                           -> /documentation/routing/layouts
+                           -> /documentation/api/components
+```
+
+### Using Catch-All Parameters
+
+The matched segments are available via `useParams()`:
+
+```tsx
+// src/pages/documentation/[...path].tsx
+import { useParams } from 'react-router-dom';
+
+export default function DocPage() {
+  const { '*': docPath } = useParams();
+
+  // docPath = "routing/layouts" for /documentation/routing/layouts
+  return <div>Viewing doc: {docPath}</div>;
+}
+```
+
+!!! note
+    In React Router, catch-all parameters are accessed via `params['*']`, not the parameter name from the filename.
+
+### Combining Dynamic and Catch-All Routes
+
+You can mix standard dynamic segments with catch-all routes:
+
+```
+src/pages/
+  └── app/
+      └── [tenant]/
+          └── docs/
+              └── [...rest].tsx   -> /app/acme/docs/guide/intro
+```
+
+```tsx
+import { useParams } from 'react-router-dom';
+
+export default function TenantDocs() {
+  const { tenant, '*': rest } = useParams();
+  // tenant = "acme", rest = "guide/intro"
+  return <div>{tenant}: {rest}</div>;
+}
+```
+
 ## Route Configuration with Requirements
 
 You can add parameter constraints using regular expressions in `aplos.config.js`:
