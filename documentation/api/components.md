@@ -4,7 +4,7 @@
 
 ### Head
 
-Manage document head elements (title, meta tags, etc.) using `react-helmet-async`.
+Manage document head elements (title, meta tags, etc.) using native DOM head management.
 
 **Import:**
 
@@ -183,6 +183,83 @@ import { useLocation } from 'react-router-dom';
 export default function Header() {
   const location = useLocation();
   return <div>Current path: {location.pathname}</div>;
+}
+```
+
+### useSearchParams
+
+Access and manipulate URL query parameters:
+
+```tsx
+import { useSearchParams } from 'react-router-dom';
+
+export default function SearchPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('q');
+
+  return <div>Searching for: {query}</div>;
+}
+```
+
+### useMatch
+
+Check if the current URL matches a given pattern:
+
+```tsx
+import { useMatch } from 'react-router-dom';
+
+export default function NavItem({ to, children }) {
+  const match = useMatch(to);
+  return <a className={match ? 'active' : ''} href={to}>{children}</a>;
+}
+```
+
+### NavLink
+
+Navigation link that automatically applies an active class when the route matches:
+
+```tsx
+import { NavLink } from 'aplos/navigation';
+
+export default function Navigation() {
+  return (
+    <nav>
+      <NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>
+        Home
+      </NavLink>
+    </nav>
+  );
+}
+```
+
+### Navigate
+
+Component for declarative redirects:
+
+```tsx
+import { Navigate } from 'aplos/navigation';
+
+export default function OldPage() {
+  return <Navigate to="/new-page" replace />;
+}
+```
+
+### Outlet
+
+Renders child routes in a layout component:
+
+```tsx
+import { Outlet } from 'aplos/navigation';
+
+export default function Layout() {
+  return (
+    <div>
+      <nav>...</nav>
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  );
 }
 ```
 

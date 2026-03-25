@@ -5,8 +5,9 @@ A fast, modern React framework with file-based routing.
 ## Features
 
 - **File-based Routing**: Automatic route generation from your file structure
-- **Dynamic Routes**: Support for parameterized URLs with `[param]` syntax
+- **Dynamic Routes**: Support for parameterized URLs with `[param]` and catch-all routes with `[...param]`
 - **Nested Layouts**: Create reusable layouts with `_layout.tsx` files
+- **Custom Rspack Config**: Extend the build configuration with your own `rspack.config.js`
 - **Fast Build**: Powered by Rspack for lightning-fast builds
 - **React 19**: Built with the latest React features
 - **TypeScript Support**: Full TypeScript support out of the box
