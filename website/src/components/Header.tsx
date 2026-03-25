@@ -9,7 +9,7 @@ export default function Header() {
     <header className="site-header">
       <div className="header-inner">
         <Link to="/" className="header-logo">
-          aplos<span>.</span> <span className="header-author">by Kemeter</span>
+          aplos<span>.</span> <a href="https://alpacode.fr" target="_blank" rel="noopener noreferrer" className="header-author">by alpacode</a>
         </Link>
 
         <button
