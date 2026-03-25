@@ -32,6 +32,9 @@ jobs:
         working-directory: website
         run: bun run build
 
+      - name: Copy index.html to 404.html for SPA routing
+        run: cp website/public/dist/index.html website/public/dist/404.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
