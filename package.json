@@ -55,7 +55,8 @@
     "postcss-nested": "^7.0.2",
     "react-refresh": "^0.16.0",
     "style-loader": "^4.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "webpack-merge": "^6.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

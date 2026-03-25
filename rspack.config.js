@@ -4,6 +4,7 @@ import ReactRefreshPlugin from "@rspack/plugin-react-refresh";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import { pathToFileURL } from "url";
+import { merge } from "webpack-merge";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -149,7 +150,20 @@ if (!isDevelopment && fs.existsSync(userPublicDir)) {
   );
 }
 
-export default {
+// Load project's rspack.config.js if it exists
+let userConfig = {};
+const userConfigPath = path.resolve(projectDirectory, "rspack.config.js");
+if (fs.existsSync(userConfigPath)) {
+  try {
+    const userModule = await import(pathToFileURL(userConfigPath).href);
+    userConfig = userModule.default || userModule;
+    console.log("Using custom rspack config from rspack.config.js");
+  } catch (error) {
+    console.error("Error loading project rspack.config.js:", error.message);
+  }
+}
+
+const frameworkConfig = {
   mode: isDevelopment ? "development" : "production",
   devtool: isDevelopment ? "eval-source-map" : "source-map",
   stats: isDevelopment ? 'none' : 'normal',
@@ -242,3 +256,5 @@ export default {
     historyApiFallback: true,
   },
 };
+
+export default merge(frameworkConfig, userConfig);
