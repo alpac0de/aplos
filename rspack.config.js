@@ -240,8 +240,6 @@ const frameworkConfig = {
       // Force single instance (avoid duplicates when framework != project dir)
       "react": path.resolve(projectDirectory, "node_modules/react"),
       "react-dom": path.resolve(projectDirectory, "node_modules/react-dom"),
-      "react-router-dom": path.resolve(projectDirectory, "node_modules/react-router-dom"),
-      "react-router": path.resolve(projectDirectory, "node_modules/react-router"),
       "aplos/config": path.resolve(__dirname, "src/config.js"),
       "aplos/navigation": path.resolve(
         __dirname,
