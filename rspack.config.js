@@ -165,7 +165,13 @@ if (fs.existsSync(userConfigPath)) {
 
 const frameworkConfig = {
   mode: isDevelopment ? "development" : "production",
-  devtool: isDevelopment ? "eval-source-map" : "source-map",
+  devtool: isDevelopment ? "eval-source-map" : false,
+  cache: {
+    type: "filesystem",
+    buildDependencies: {
+      config: [path.resolve(__dirname, "rspack.config.js")],
+    },
+  },
   stats: isDevelopment ? 'none' : 'normal',
   infrastructureLogging: {
     level: isDevelopment ? 'error' : 'info',
@@ -207,20 +213,42 @@ const frameworkConfig = {
       {
         test: /\.(js|ts|jsx|tsx)$/,
         exclude: /node_modules\/(?!aplos)|bower_components|\.aplos[\\/]cache/,
-        use: {
-          loader: "babel-loader",
-          options: {
-            presets: [
-              ["@babel/preset-env", { modules: false }],
-              ["@babel/preset-react", { runtime: "automatic" }],
-              "@babel/preset-typescript",
-            ],
-            plugins: [
-              ["babel-plugin-react-compiler", {}],
-              isDevelopment && "react-refresh/babel",
-            ].filter(Boolean),
+        use: [
+          // SWC handles transpilation (TS, JSX, env targets) — much faster than Babel
+          {
+            loader: "builtin:swc-loader",
+            options: {
+              jsc: {
+                parser: {
+                  syntax: "typescript",
+                  tsx: true,
+                },
+                transform: {
+                  react: {
+                    runtime: "automatic",
+                    refresh: isDevelopment,
+                  },
+                },
+              },
+              env: {
+                targets: "defaults",
+              },
+            },
           },
-        },
+          // Babel is kept solely for React Compiler (no SWC equivalent yet)
+          // and react-refresh/babel in dev. Runs after SWC so it receives
+          // already-transpiled JS, keeping its workload minimal.
+          {
+            loader: "babel-loader",
+            options: {
+              presets: [],
+              plugins: [
+                ["babel-plugin-react-compiler", {}],
+                isDevelopment && "react-refresh/babel",
+              ].filter(Boolean),
+            },
+          },
+        ],
       },
       {
         test: /\.css$/,
