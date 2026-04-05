@@ -165,7 +165,7 @@ if (fs.existsSync(userConfigPath)) {
 
 const frameworkConfig = {
   mode: isDevelopment ? "development" : "production",
-  devtool: isDevelopment ? "eval-source-map" : false,
+  devtool: isDevelopment ? "eval-source-map" : "hidden-source-map",
   cache: {
     type: "filesystem",
     buildDependencies: {
