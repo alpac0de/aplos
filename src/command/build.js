@@ -95,13 +95,11 @@ export default async (options) => {
             showBundleAnalysis(projectDirectory);
         }
 
-        if (options.static) {
-            try {
-                await ssg({ mode: options.mode });
-            } catch (err) {
-                console.error(`SSG failed: ${err.message}`);
-                process.exitCode = 1;
-            }
+        try {
+            await ssg({ mode: options.mode, forceAll: options.static });
+        } catch (err) {
+            console.error(`SSG failed: ${err.message}`);
+            process.exitCode = 1;
         }
     });
 };

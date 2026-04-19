@@ -46,7 +46,7 @@ async function buildSSRBundle(projectDirectory, frameworkDirectory, mode) {
     });
 }
 
-export default async function ssg({ mode }) {
+export default async function ssg({ mode, forceAll = false } = {}) {
     const projectDirectory = process.cwd();
     const frameworkDirectory = path.resolve(__dirname, '../..');
     const distDir = path.join(projectDirectory, 'public', 'dist');
@@ -55,6 +55,18 @@ export default async function ssg({ mode }) {
     const indexHtmlPath = path.join(distDir, 'index.html');
     if (!fs.existsSync(indexHtmlPath)) {
         throw new Error(`SSG: ${indexHtmlPath} not found — run the client build first.`);
+    }
+
+    // Skip the expensive SSR bundle build if no page opted in and --static wasn't passed.
+    if (!forceAll) {
+        const routesPath = path.join(cacheDir, 'routes.js');
+        if (!fs.existsSync(routesPath)) {
+            return;
+        }
+        const source = fs.readFileSync(routesPath, 'utf-8');
+        if (!/static:\s*true/.test(source)) {
+            return;
+        }
     }
 
     console.log('\n  Building SSR bundle...');
@@ -72,9 +84,8 @@ export default async function ssg({ mode }) {
         throw new Error('SSG: SSR bundle must export render(url) and getStaticRoutes().');
     }
 
-    const staticRoutes = getStaticRoutes();
+    const staticRoutes = getStaticRoutes({ forceAll });
     if (staticRoutes.length === 0) {
-        console.log('  No static routes to pre-render.');
         return;
     }
 
