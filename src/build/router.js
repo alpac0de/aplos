@@ -71,13 +71,17 @@ export async function buildRouter(aplos) {
         path = path.replace(/\[\.\.\..*?]/g, '*');
         path = path.replace(/\[(.*?)]/g, ':$1');
 
+        const absolutePageFile = `${pageDirectory}${file.replace('~', '')}`;
+        const staticDirective = hasUseStaticDirective(absolutePageFile);
+
         let existingPage = pages.find(p => p.path === path);
         if (!existingPage) {
             const config = {
                 "path": path,
                 "component": capitalizeName,
                 "file": file.replaceAll('//', '/'),
-                "requirement": {}
+                "requirement": {},
+                "static": staticDirective
             };
 
             routes.push(config);
@@ -214,6 +218,7 @@ function serializeRouteTree(nodes, indent = '') {
         const parts = [];
         if (node.component) parts.push(`${inner}element: ${node.component}`);
         if (node.path !== undefined) parts.push(`${inner}path: ${JSON.stringify(node.path)}`);
+        if (node.static === true) parts.push(`${inner}static: true`);
         if (node.children) {
             parts.push(`${inner}children: ${serializeRouteTree(node.children, inner)}`);
         }
@@ -238,6 +243,35 @@ function generateHeadFile(head, reactStrictMode) {
     lines.push(`export default ${JSON.stringify(headObj, null, 2)};`);
     lines.push(`export const reactStrictMode = ${!!reactStrictMode};`);
     return lines.join('\n') + '\n';
+}
+
+/**
+ * Detect a leading `'use static'` / `"use static"` directive in a page file.
+ * Scans the first non-empty, non-comment lines before any code/import.
+ * @param {string} filePath
+ * @returns {boolean}
+ */
+function hasUseStaticDirective(filePath) {
+    try {
+        const source = fs.readFileSync(filePath, 'utf-8');
+        const lines = source.split('\n');
+        for (const rawLine of lines) {
+            const line = rawLine.trim();
+            if (line === '') {
+                continue;
+            }
+            if (line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) {
+                continue;
+            }
+            if (line === `'use static';` || line === `"use static";` || line === `'use static'` || line === `"use static"`) {
+                return true;
+            }
+            return false;
+        }
+    } catch (error) {
+        return false;
+    }
+    return false;
 }
 
 /**
@@ -367,7 +401,11 @@ function buildNestedRoutes(pages, layoutTree) {
         // Add pages for this level
         const pagesAtLevel = routesByPath.get(currentPath) || [];
         pagesAtLevel.forEach(page => {
-            nodes.push({ path: page.path, component: page.component });
+            const node = { path: page.path, component: page.component };
+            if (page.static) {
+                node.static = true;
+            }
+            nodes.push(node);
         });
 
         // Add nested layouts
