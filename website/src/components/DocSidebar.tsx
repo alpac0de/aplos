@@ -1,45 +1,46 @@
 import { useState } from 'react';
 import { NavLink } from 'aplos/navigation';
+import { getAllDocs, docToUrl, humanize } from '@/lib/docs';
 import '@/styles/components/sidebar.css';
 
-const sections = [
-  {
-    title: 'Getting Started',
-    links: [
-      { to: '/documentation', label: 'Overview' },
-      { to: '/documentation/installation', label: 'Installation' },
-      { to: '/documentation/quick-start', label: 'Quick Start' },
-    ],
-  },
-  {
-    title: 'Routing',
-    links: [
-      { to: '/documentation/routing/file-based', label: 'File-based Routing' },
-      { to: '/documentation/routing/layouts', label: 'Layouts' },
-      { to: '/documentation/routing/dynamic-routes', label: 'Dynamic Routes' },
-    ],
-  },
-  {
-    title: 'Configuration',
-    links: [
-      { to: '/documentation/configuration', label: 'Overview' },
-      { to: '/documentation/configuration/rspack', label: 'Custom Rspack Config' },
-      { to: '/documentation/configuration/runtime', label: 'Runtime Configuration' },
-    ],
-  },
-  {
-    title: 'CLI',
-    links: [
-      { to: '/documentation/cli', label: 'Commands' },
-    ],
-  },
-  {
-    title: 'API',
-    links: [
-      { to: '/documentation/api', label: 'Components & Hooks' },
-    ],
-  },
-];
+interface Link {
+  to: string;
+  label: string;
+}
+
+interface Section {
+  title: string;
+  links: Link[];
+}
+
+function buildSections(): Section[] {
+  const rootLinks: Link[] = [];
+  const sectionsByFolder = new Map<string, Link[]>();
+
+  for (const doc of getAllDocs()) {
+    const link = { to: docToUrl(doc.slug), label: doc.title };
+    if (doc.segments.length <= 1) {
+      rootLinks.push(link);
+    } else {
+      const folder = doc.segments[0];
+      if (!sectionsByFolder.has(folder)) {
+        sectionsByFolder.set(folder, []);
+      }
+      sectionsByFolder.get(folder)!.push(link);
+    }
+  }
+
+  const sections: Section[] = [];
+  if (rootLinks.length > 0) {
+    sections.push({ title: 'Getting Started', links: rootLinks });
+  }
+  for (const [folder, links] of sectionsByFolder) {
+    sections.push({ title: humanize(folder), links });
+  }
+  return sections;
+}
+
+const sections = buildSections();
 
 export default function DocSidebar() {
   const [open, setOpen] = useState(false);
