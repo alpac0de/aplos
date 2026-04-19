@@ -20,20 +20,22 @@ function isStaticPath(p) {
     return true;
 }
 
-function walk(nodes, acc) {
+function walk(nodes, acc, forceAll) {
     for (const node of nodes) {
         if (node.path !== undefined && isStaticPath(node.path)) {
-            acc.push(node.path);
+            if (forceAll || node.static === true) {
+                acc.push(node.path);
+            }
         }
         if (node.children) {
-            walk(node.children, acc);
+            walk(node.children, acc, forceAll);
         }
     }
 }
 
-export function getStaticRoutes() {
+export function getStaticRoutes({ forceAll = false } = {}) {
     const acc = [];
-    walk(routeTree, acc);
+    walk(routeTree, acc, forceAll);
     return Array.from(new Set(acc));
 }
 
