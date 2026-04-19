@@ -27,9 +27,14 @@ program
   .command("build")
   .description("Build assets")
   .option(
-    "--mode",
+    "--mode <mode>",
     "Providing the mode configuration option tells webpack to use its built-in optimizations accordingly",
     process.env.NODE_ENV || "development"
+  )
+  .option(
+    "--static",
+    "Pre-render each static route to HTML (SSG). Dynamic routes fall back to SPA.",
+    false
   )
   .action(build);
 

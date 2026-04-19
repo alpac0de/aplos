@@ -1,6 +1,7 @@
 import {spawn} from "child_process";
 import {buildRouter}  from "../build/router.js";
 import get_config from '../build/config.js';
+import ssg from '../build/ssg.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -81,17 +82,24 @@ export default async (options) => {
         console.log(`stderr: ${data.toString()}`);
     });
 
-    rspack.on('close', (code) => {
+    rspack.on('close', async (code) => {
         if (code !== 0) {
             console.log(`error: Process exited with code ${code}`);
-        } else {
-            const totalTime = Math.round(performance.now() - buildStart);
-            console.log(`\n  Built in ${totalTime}ms`);
+            return;
+        }
 
-            // Show build analysis in production
-            if (options.mode === 'production' || process.env.NODE_ENV === 'production') {
-                showBundleAnalysis(projectDirectory);
-            }
+        const totalTime = Math.round(performance.now() - buildStart);
+        console.log(`\n  Built in ${totalTime}ms`);
+
+        if (options.mode === 'production' || process.env.NODE_ENV === 'production') {
+            showBundleAnalysis(projectDirectory);
+        }
+
+        try {
+            await ssg({ mode: options.mode, forceAll: options.static });
+        } catch (err) {
+            console.error(`SSG failed: ${err.message}`);
+            process.exitCode = 1;
         }
     });
 };
