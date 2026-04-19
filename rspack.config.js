@@ -23,16 +23,18 @@ if (fs.existsSync(userTemplate)) {
   console.log("Using custom HTML template from public/index.html");
 }
 
-// Load configuration to get head meta tags
+// Load project configuration
 let headConfig = { meta: [], link: [], script: [] };
+let reactCompilerEnabled = false;
 const configPath = path.join(projectDirectory, 'aplos.config.js');
 if (fs.existsSync(configPath)) {
   try {
     const configModule = await import(pathToFileURL(configPath).href);
     const config = configModule.default || configModule;
     headConfig = config.head || headConfig;
+    reactCompilerEnabled = config.reactCompiler === true;
   } catch (error) {
-    console.error('Error loading configuration for head tags:', error);
+    console.error('Error loading configuration:', error);
   }
 }
 
@@ -215,14 +217,16 @@ const frameworkConfig = {
         exclude: /node_modules\/(?!aplos)|bower_components|\.aplos[\\/]cache/,
         use: [
           // Loaders run bottom-up: SWC transpiles first (TS/JSX → JS), then Babel
-          // receives already-transpiled JS and only applies React Compiler
-          // (and react-refresh/babel in dev).
-          {
+          // applies React Compiler (opt-in) and react-refresh/babel (dev).
+          // Babel is skipped entirely when neither is needed — SWC alone is
+          // ~7x faster. Enable React Compiler via `reactCompiler: true` in
+          // aplos.config.js when auto-memoization benefits justify the cost.
+          (isDevelopment || reactCompilerEnabled) && {
             loader: "babel-loader",
             options: {
               presets: [],
               plugins: [
-                ["babel-plugin-react-compiler", {}],
+                reactCompilerEnabled && ["babel-plugin-react-compiler", {}],
                 isDevelopment && "react-refresh/babel",
               ].filter(Boolean),
             },
@@ -247,7 +251,7 @@ const frameworkConfig = {
               },
             },
           },
-        ],
+        ].filter(Boolean),
       },
       {
         test: /\.css$/,
