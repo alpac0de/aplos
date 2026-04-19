@@ -214,7 +214,19 @@ const frameworkConfig = {
         test: /\.(js|ts|jsx|tsx)$/,
         exclude: /node_modules\/(?!aplos)|bower_components|\.aplos[\\/]cache/,
         use: [
-          // SWC handles transpilation (TS, JSX, env targets) — much faster than Babel
+          // Loaders run bottom-up: SWC transpiles first (TS/JSX → JS), then Babel
+          // receives already-transpiled JS and only applies React Compiler
+          // (and react-refresh/babel in dev).
+          {
+            loader: "babel-loader",
+            options: {
+              presets: [],
+              plugins: [
+                ["babel-plugin-react-compiler", {}],
+                isDevelopment && "react-refresh/babel",
+              ].filter(Boolean),
+            },
+          },
           {
             loader: "builtin:swc-loader",
             options: {
@@ -235,19 +247,6 @@ const frameworkConfig = {
               },
             },
           },
-          // Babel is kept solely for React Compiler (no SWC equivalent yet)
-          // and react-refresh/babel in dev. Runs after SWC so it receives
-          // already-transpiled JS, keeping its workload minimal.
-          {
-            loader: "babel-loader",
-            options: {
-              presets: [],
-              plugins: [
-                ["babel-plugin-react-compiler", {}],
-                isDevelopment && "react-refresh/babel",
-              ].filter(Boolean),
-            },
-          },
         ],
       },
       {
@@ -265,9 +264,14 @@ const frameworkConfig = {
   },
   resolve: {
     alias: {
-      // Force single instance (avoid duplicates when framework != project dir)
-      "react": path.resolve(projectDirectory, "node_modules/react"),
-      "react-dom": path.resolve(projectDirectory, "node_modules/react-dom"),
+      // Force single instance (avoid duplicates when framework != project dir).
+      // Use `$` exact-match so subpath imports (e.g. `react-router/dom`) still
+      // resolve via the package's exports map instead of being rewritten to a
+      // directory path.
+      "react$": path.resolve(projectDirectory, "node_modules/react"),
+      "react-dom$": path.resolve(projectDirectory, "node_modules/react-dom"),
+      "react-router-dom$": path.resolve(projectDirectory, "node_modules/react-router-dom"),
+      "react-router$": path.resolve(projectDirectory, "node_modules/react-router"),
       "aplos/config": path.resolve(__dirname, "src/config.js"),
       "aplos/navigation": path.resolve(
         __dirname,
