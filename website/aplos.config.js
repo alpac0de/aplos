@@ -8,7 +8,7 @@ function walkMdFiles(dir, prefix = '') {
     const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
     if (entry.isDirectory()) {
       out.push(...walkMdFiles(abs, rel));
-    } else if (entry.isFile() && entry.name.endsWith('.md')) {
+    } else if (entry.isFile() && entry.name.endsWith('.md') && entry.name.toLowerCase() !== 'readme.md') {
       out.push(rel.replace(/\.md$/, '').replace(/\/?index$/, ''));
     }
   }

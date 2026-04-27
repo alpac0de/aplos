@@ -24,7 +24,9 @@ function humanize(segment: string): string {
 
 const ctx = require.context('@docs', true, /\.md$/, 'sync');
 
-const docs: DocEntry[] = ctx.keys().map((key) => {
+const docs: DocEntry[] = ctx.keys()
+  .filter((key) => !/(^|\/)README\.md$/i.test(key))
+  .map((key) => {
   const relPath = key.replace(/^\.\//, '').replace(/\.md$/, '');
   const slug = relPath.replace(/\/?index$/, '');
   const segments = slug.split('/').filter(Boolean);
