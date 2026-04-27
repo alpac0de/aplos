@@ -64,7 +64,7 @@ export async function buildRouter(aplos) {
         }
 
         let found = routes.find(element => element.source === path);
-        if (found) {
+        if (found && found.destination) {
             path = found.destination;
         }
 
@@ -89,14 +89,65 @@ export async function buildRouter(aplos) {
         }
     });
 
+    // Expand `paths` declared in route entries into concrete static pages that
+    // share the component of their matching catch-all. Lets the SSG pre-render
+    // each URL without asking the user to split the catch-all into many files.
+    const configuredRoutes = aplos.routes || [];
+    for (const entry of configuredRoutes) {
+        if (!entry || !entry.paths || !entry.source) {
+            continue;
+        }
+        const catchAllPath = entry.source.replace(/\[\.\.\..*?]/g, '*').replace(/\[(.*?)]/g, ':$1');
+        const catchAll = pages.find(p => p.path === catchAllPath);
+        if (!catchAll) {
+            console.warn(`Route config: no page matches source "${entry.source}" — skipping paths expansion.`);
+            continue;
+        }
+        let paths = entry.paths;
+        if (typeof paths === 'function') {
+            try {
+                paths = paths();
+            } catch (error) {
+                console.error(`Route config: paths() threw for source "${entry.source}":`, error.message);
+                continue;
+            }
+        }
+        if (!Array.isArray(paths)) {
+            console.warn(`Route config: paths for "${entry.source}" must be an array or a function returning one.`);
+            continue;
+        }
+        for (const concretePath of paths) {
+            if (typeof concretePath !== 'string' || !concretePath.startsWith('/')) {
+                continue;
+            }
+            if (pages.find(p => p.path === concretePath)) {
+                continue;
+            }
+            pages.push({
+                path: concretePath,
+                component: catchAll.component,
+                file: catchAll.file,
+                requirement: {},
+                static: true,
+            });
+        }
+    }
+
     // Detect _app, _404, _error files
     const appFile = findSpecialFile(pageDirectory, '_app', appExtensions);
     const notFoundFile = findSpecialFile(pageDirectory, '_404', appExtensions);
     const errorFile = findSpecialFile(pageDirectory, '_error', appExtensions);
 
-    // Generate pages.js (re-exports for all pages + special files)
+    // Generate pages.js (re-exports for all pages + special files). Pages
+    // expanded from `routes[].paths` reuse the same component as their
+    // catch-all parent, so we dedupe exports by component name here.
     const pagesExports = [];
+    const exportedComponents = new Set();
     pages.forEach(page => {
+        if (exportedComponents.has(page.component)) {
+            return;
+        }
+        exportedComponents.add(page.component);
         const componentFileName = page.file.replace('~', '');
         pagesExports.push(`export { default as ${page.component} } from "${projectDirectory}/src/pages${componentFileName}";`);
     });

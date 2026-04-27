@@ -1,25 +1,16 @@
-import { useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import MarkdownPage from '@/components/MarkdownPage';
+import { getDoc } from '@/lib/docs';
 
-const PATH_MAP: Record<string, { file: string; title: string }> = {
-  '': { file: 'index.md', title: 'Overview' },
-  'installation': { file: 'getting-started/installation.md', title: 'Installation' },
-  'quick-start': { file: 'getting-started/quick-start.md', title: 'Quick Start' },
-  'routing/file-based': { file: 'routing/file-based.md', title: 'File-based Routing' },
-  'routing/layouts': { file: 'routing/layouts.md', title: 'Layouts' },
-  'routing/dynamic-routes': { file: 'routing/dynamic-routes.md', title: 'Dynamic Routes' },
-  'configuration': { file: 'configuration/overview.md', title: 'Configuration' },
-  'configuration/rspack': { file: 'configuration/rspack.md', title: 'Custom Rspack Config' },
-  'configuration/runtime': { file: 'configuration/runtime.md', title: 'Runtime Configuration' },
-  'cli': { file: 'cli/commands.md', title: 'CLI Commands' },
-  'api': { file: 'api/components.md', title: 'API Reference' },
+const NOT_FOUND = {
+  content: '# Page not found\n\nThis documentation page does not exist.',
+  title: 'Page not found',
 };
 
 export default function DocPage() {
-  const params = useParams();
-  const path = params['*'] || '';
+  const { pathname } = useLocation();
+  const slug = pathname.replace(/^\/documentation\/?/, '').replace(/\/$/, '');
+  const page = getDoc(slug) ?? NOT_FOUND;
 
-  const page = PATH_MAP[path] || { file: path + '.md', title: 'Documentation' };
-
-  return <MarkdownPage path={page.file} title={`${page.title} - Aplos Docs`} />;
+  return <MarkdownPage content={page.content} title={`${page.title} - Aplos Docs`} />;
 }
