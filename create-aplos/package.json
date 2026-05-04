@@ -1,0 +1,29 @@
+{
+  "name": "create-aplos",
+  "version": "0.14.0",
+  "description": "Scaffold a new Aplos project",
+  "type": "module",
+  "bin": {
+    "create-aplos": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "templates"
+  ],
+  "keywords": [
+    "aplos",
+    "react",
+    "scaffold",
+    "starter",
+    "create"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alpac0de/aplos.git",
+    "directory": "create-aplos"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
