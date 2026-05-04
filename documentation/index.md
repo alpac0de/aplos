@@ -1,29 +1,41 @@
-# Aplos Framework
+# Aplos
 
-A fast, modern React framework with file-based routing.
+The fast, file-based React framework. Client-side by default, statically rendered when you ask.
 
-## Features
+```tsx
+// src/pages/index.tsx
+"use static";
 
-- **File-based Routing**: Automatic route generation from your file structure
-- **Dynamic Routes**: Support for parameterized URLs with `[param]` and catch-all routes with `[...param]`
-- **Nested Layouts**: Create reusable layouts with `_layout.tsx` files
-- **Custom Rspack Config**: Extend the build configuration with your own `rspack.config.js`
-- **Fast Build**: Powered by Rspack for lightning-fast builds
-- **React 19**: Built with the latest React features
-- **TypeScript Support**: Full TypeScript support out of the box
+export default function Home() {
+  return <h1>Hello, Aplos.</h1>;
+}
+```
 
-## Quick Links
-
-- [Installation](getting-started/installation.md)
-- [Quick Start](getting-started/quick-start.md)
-- [File-based Routing](routing/file-based.md)
-- [CLI Commands](cli/commands.md)
+```bash
+bun create aplos my-app
+cd my-app
+bun dev
+```
 
 ## Why Aplos?
 
-Aplos is a minimalist React framework focused on developer experience. It provides file-based routing similar to Next.js, but stays focused on client-side rendering without the complexity of SSR/SSG.
+- **File-based routing** out of the box — drop a file in `src/pages/`, get a route.
+- **SPA-first**, static-on-opt-in — add `"use static"` at the top of a page to pre-render it to HTML at build time. No SSR runtime, no vendor lock-in.
+- **Rspack** under the hood — builds in milliseconds.
+- **React 19** with the React Compiler available as opt-in.
+- **Plain HTML + JS output** — deploys anywhere (GitHub Pages, S3, Cloudflare, nginx).
 
-## Getting Help
+## Get started
 
-- [GitHub Issues](https://github.com/alpac0de/aplos/issues)
-- [GitHub Repository](https://github.com/alpac0de/aplos)
+- [Installation](getting-started/installation.md) — prerequisites and one-line scaffolding.
+- [Quick start](getting-started/quick-start.md) — your first Aplos app in 4 steps.
+- [Static rendering](static-rendering.md) — pre-render pages to HTML for SEO and instant first paint.
+
+## Compare with alternatives
+
+See how Aplos stacks up against [Next.js, Astro and Vite + React](comparison.md).
+
+## Help
+
+- [GitHub repository](https://github.com/alpac0de/aplos)
+- [Issue tracker](https://github.com/alpac0de/aplos/issues)

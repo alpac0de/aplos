@@ -1,0 +1,91 @@
+# Deploy to a static host
+
+Aplos's production build outputs plain HTML, JS, and CSS. It runs on any static file host: Netlify, Vercel, Cloudflare Pages, S3, nginx, Caddy, or your own server.
+
+## Build
+
+```bash
+bun run build --static
+```
+
+The output is in `public/dist/`. Upload that directory's contents to the host.
+
+```
+public/dist/
+├── index.html
+├── about.html
+├── 404.html
+├── main.<hash>.js
+├── main.<hash>.css
+├── vendors.<hash>.js
+└── ...
+```
+
+## Netlify
+
+Drop the `public/dist/` folder onto netlify.com, or use the CLI:
+
+```bash
+bunx netlify deploy --prod --dir public/dist
+```
+
+Or wire up Git deploys with a `netlify.toml`:
+
+```toml
+[build]
+  command = "bun run build --static"
+  publish = "public/dist"
+```
+
+## Vercel
+
+```bash
+bunx vercel --prod
+```
+
+Or commit a `vercel.json`:
+
+```json
+{
+  "buildCommand": "bun run build --static",
+  "outputDirectory": "public/dist"
+}
+```
+
+## Cloudflare Pages
+
+Connect your repository in the Cloudflare dashboard, then set:
+
+- **Build command:** `bun run build --static`
+- **Build output directory:** `public/dist`
+
+## nginx
+
+Serve `public/dist/` as the document root with a SPA fallback for client-side routes:
+
+```nginx
+server {
+    listen 80;
+    server_name example.com;
+    root /var/www/my-app/public/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ $uri.html /index.html;
+    }
+}
+```
+
+The `$uri.html` fallback serves pre-rendered pages (`/about` → `/about.html`) when present, and falls back to `index.html` for client-only routes.
+
+## S3 + CloudFront
+
+```bash
+aws s3 sync public/dist s3://your-bucket --delete
+```
+
+In CloudFront, configure a custom error response: 403/404 → `/index.html` with status 200, so client-side routes resolve.
+
+## What if I'm not using static rendering?
+
+You can still deploy to a static host without `--static`. The output will be a single SPA shell (`index.html`) plus the JS/CSS bundles. The host needs an SPA fallback (every unknown URL serves `index.html`) — see the nginx/CloudFront examples above.

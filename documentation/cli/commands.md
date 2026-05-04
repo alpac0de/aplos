@@ -1,147 +1,122 @@
 # CLI Commands
 
-Aplos provides several CLI commands to help you develop and build your application.
+Aplos ships with a small CLI. All commands are available via `aplos`, `bunx aplos` or `npx aplos`.
 
-## server
+## `aplos create <name>`
 
-Start the development server with hot reloading.
+Scaffold a new Aplos project. See the [dedicated guide](create.md).
 
 ```bash
-npx aplos server
+aplos create my-app
+# or, without installing aplos:
+bun create aplos my-app
+```
+
+## `aplos server`
+
+Start the development server with hot module replacement.
+
+```bash
+aplos server
 ```
 
 **Features:**
 
-- Hot reloading enabled
-- Environment variables support
-- On-the-fly compilation
-- Default port: 3000 (configurable)
-- Automatic port fallback: if the configured port is busy, finds the next available one (unless `APLOS_SERVER_PORT` is explicitly set)
-- Network URL display: shows both `localhost` and LAN IP for testing on other devices
-- Feature detection: displays enabled features on startup (TypeScript, PostCSS, React Compiler, HMR)
+- Hot module replacement (React Refresh)
+- Auto-loads `.env` and `.env.local`
+- Browser error overlay
+- Default port `3000`, falls back to next free port if taken
+- Displays both local and network URLs on startup
+- Lists active features (TypeScript, PostCSS, React Compiler, HMR)
 
-**Configuration:**
+**Configure the port:**
 
-```javascript
+```js
 // aplos.config.js
-module.exports = {
-  server: {
-    port: 4000
-  }
-}
+export default {
+  server: { port: 4000 },
+};
 ```
 
-Or use environment variable:
+Or via environment variable:
 
 ```bash
-APLOS_SERVER_PORT=4000 npx aplos server
+APLOS_SERVER_PORT=4000 aplos server
 ```
 
-## build
+## `aplos build`
 
-Generate optimized production build.
+Generate a production build.
 
 ```bash
-npx aplos build
+aplos build
 ```
 
-**Features:**
-
-- Asset minification
-- Tree shaking
-- Static route generation
-- Output directory: `public/dist`
-- Bundle analysis: displays a size breakdown of generated JS files after production builds, with performance tips
+Output goes to `public/dist/`.
 
 **Options:**
 
-```bash
-npx aplos build --mode production
-```
+| Flag | Description |
+|---|---|
+| `--mode <mode>` | Sets the build mode. Defaults to `development`; pass `production` for optimized output. |
+| `--static` | Pre-render opt-in pages to static HTML (SSG). See [Static rendering](../static-rendering.md). |
 
-The `--mode` option sets the build mode (default: `development`).
-
-## router:debug
-
-Display a table of all application routes.
+**Examples:**
 
 ```bash
-npx aplos router:debug
+# Production build, SPA only
+aplos build --mode production
+
+# Production build with static pre-rendering for opt-in pages
+aplos build --mode production --static
 ```
 
-**Example output:**
+## `aplos router:debug`
+
+Print every route in the application as a table.
+
+```bash
+aplos router:debug
+```
 
 ```
 ┌───────────┬────────┬──────┬────────────────┐
 │ Component │ Scheme │ Host │ Path           │
 ├───────────┼────────┼──────┼────────────────┤
-│ B         │ Any    │ Any  │ /b             │
-├───────────┼────────┼──────┼────────────────┤
-│ BlogEdit  │ Any    │ Any  │ /blog/:id/edit │
-├───────────┼────────┼──────┼────────────────┤
-│ BlogShow  │ Any    │ Any  │ /blog/:id/show │
-├───────────┼────────┼──────┼────────────────┤
 │ Index     │ Any    │ Any  │ /              │
+│ BlogShow  │ Any    │ Any  │ /blog/:id      │
 └───────────┴────────┴──────┴────────────────┘
 ```
 
-**With route name:**
+Pass a route name to inspect a single route:
 
 ```bash
-npx aplos router:debug BlogPost
+aplos router:debug BlogShow
 ```
 
-This displays detailed information about a specific route.
+## `aplos router:match <url>`
 
-## router:match
-
-Test if a URL matches any route.
+Test whether a URL matches any registered route.
 
 ```bash
-npx aplos router:match <url>
+aplos router:match /blog/42
 ```
-
-**Example:**
-
-```bash
-npx aplos router:match /article/123
-```
-
-**Output:**
 
 ```
 +--------------+----------------------------------+
-| Property     | Value                            |
-+--------------+----------------------------------+
-| Route Name   | ArticleShow                      |
-| Path         | /article/:id                     |
-| Path Regex   | {^/article/(?P<id>[^/]++)$}     |
-| Host         | ANY                              |
-| Scheme       | ANY                              |
+| Route Name   | BlogShow                         |
+| Path         | /blog/:id                        |
+| Path Regex   | {^/blog/(?P<id>[^/]++)$}         |
 | Requirements | NO CUSTOM                        |
 +--------------+----------------------------------+
 ```
 
-This command helps debug routing by showing which route (if any) matches a given URL pattern.
+Useful for debugging routing rules and parameter constraints.
 
-## --version
-
-Display the Aplos version.
+## `--version` / `--help`
 
 ```bash
-npx aplos --version
-```
-
-## --help
-
-Display help information for all commands.
-
-```bash
-npx aplos --help
-```
-
-Or for a specific command:
-
-```bash
-npx aplos server --help
+aplos --version
+aplos --help
+aplos server --help
 ```

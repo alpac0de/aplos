@@ -1,48 +1,47 @@
-# Quick Start
+# Quick start
 
-## Create Your First Page
+Get an Aplos app running in 4 steps.
 
-Create a `src/pages` directory in your project and add an `index.tsx` file:
-
-```tsx
-// src/pages/index.tsx
-export default function Home() {
-  return (
-    <div>
-      <h1>Welcome to Aplos!</h1>
-      <p>Your first page is ready.</p>
-    </div>
-  );
-}
-```
-
-## Start Development Server
+## 1. Scaffold
 
 ```bash
-npx aplos server
+bun create aplos my-app
+cd my-app
+bun install
 ```
 
-The development server will start on port 3000 by default. Open [http://localhost:3000](http://localhost:3000) to see your application.
+## 2. Start the dev server
 
-## Add More Pages
+```bash
+bun dev
+```
 
-Create additional pages by adding files to `src/pages`:
+Open [http://localhost:3000](http://localhost:3000). Edit `src/pages/index.tsx` and the page reloads instantly.
+
+## 3. Add a route
+
+Aplos uses file-based routing. Create a new file in `src/pages/` and it becomes a route:
 
 ```tsx
 // src/pages/about.tsx
 export default function About() {
-  return <h1>About Page</h1>;
+  return <h1>About</h1>;
 }
 ```
 
-This page will automatically be available at `/about`.
+The page is now served at [/about](http://localhost:3000/about).
 
-## Build for Production
-
-When you're ready to deploy:
+## 4. Build for production
 
 ```bash
-npx aplos build
+bun run build
 ```
 
-This generates optimized production assets in the `public/dist` directory.
+Output lands in `public/dist/` — plain HTML, JS and CSS ready to deploy to any static host.
+
+## Next steps
+
+- [Static rendering](../static-rendering.md) — pre-render pages to HTML for SEO and instant first paint.
+- [File-based routing](../routing/file-based.md) — dynamic and catch-all routes.
+- [Layouts](../routing/layouts.md) — share UI between pages.
+- [Deploy](../deploy/github-pages.md) — ship your app.

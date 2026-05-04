@@ -1,34 +1,51 @@
 # Installation
 
-## Install from GitHub
-
-```bash
-npm install https://github.com/alpac0de/aplos.git
-```
+The fastest way to start a new Aplos project is the scaffolding command.
 
 ## Prerequisites
 
-- Node.js 18+ or Bun
-- React 19+
+- **Bun** ≥ 1.0 (recommended) or **Node.js** ≥ 18
+- A terminal
 
-## Peer Dependencies
-
-Aplos requires React and React DOM as peer dependencies:
+## Scaffold a new project
 
 ```bash
-npm install react@19 react-dom@19
+bun create aplos my-app
 ```
 
-Or with Bun:
+Or with npm:
 
 ```bash
-bun add react@19 react-dom@19
+npm create aplos@latest my-app
 ```
 
-## Verify Installation
+This creates a new directory `my-app/` with a minimal Aplos project ready to run.
 
-After installation, you can verify Aplos is installed correctly by running:
+## Run the project
 
 ```bash
-npx aplos --version
+cd my-app
+bun install
+bun dev
 ```
+
+The dev server starts on [http://localhost:3000](http://localhost:3000) (or the next free port if 3000 is taken).
+
+## Add Aplos to an existing project
+
+If you already have a project and want to add Aplos manually:
+
+```bash
+bun add aplosjs
+bun add react@19 react-dom@19 react-router-dom@7
+```
+
+Then create a `src/pages/` directory and your first page (see [Quick start](quick-start.md)).
+
+## Verify
+
+```bash
+bunx aplos --version
+```
+
+Expected output: a version number like `0.14.0`.
