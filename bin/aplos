@@ -14,6 +14,7 @@ import { Command } from "commander";
 import devServer from "../src/command/devServer.js";
 import build from "../src/command/build.js";
 import router from "../src/command/router.js";
+import create from "../src/command/create.js";
 
 const program = new Command();
 program.name("Aplos").description("React Framework").version("0.14.0");
@@ -49,5 +50,11 @@ program
   .argument("<url>", "URL to test against routes")
   .description("Test if a URL matches any route")
   .action((url) => router({ url }));
+
+program
+  .command("create")
+  .argument("<project-name>", "Name of the new project")
+  .description("Scaffold a new Aplos project")
+  .action(create);
 
 program.parse();
