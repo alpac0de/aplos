@@ -16,7 +16,7 @@ import build from "../src/command/build.js";
 import router from "../src/command/router.js";
 
 const program = new Command();
-program.name("Aplos").description("React Framework").version("0.0.1");
+program.name("Aplos").description("React Framework").version("0.14.0");
 
 program
   .command("server")
