@@ -1,4 +1,4 @@
-name: Deploy Website
+name: Deploy website
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
     paths:
       - 'website/**'
       - 'documentation/**'
+      - '.github/workflows/deploy-website.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,7 +16,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -23,20 +25,29 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Install dependencies
         working-directory: website
-        run: bun install
+        run: bun install --frozen-lockfile
 
-      - name: Build website
+      - name: Build
         working-directory: website
-        run: bun run build
+        run: bun run build --mode production
+        env:
+          NODE_ENV: production
 
-      - name: Copy index.html to 404.html for SPA routing
-        run: cp website/public/dist/index.html website/public/dist/404.html
+      - name: Copy documentation assets
+        run: |
+          mkdir -p website/public/dist/documentation/assets
+          if [ -d documentation/assets ]; then
+            cp -r documentation/assets/. website/public/dist/documentation/assets/
+          fi
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: website/public/dist
 
@@ -47,6 +58,5 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
