@@ -150,11 +150,19 @@ export async function buildRouter(aplos) {
         exportedComponents.add(page.component);
         const componentFileName = page.file.replace('~', '');
         pagesExports.push(`export { default as ${page.component} } from "${projectDirectory}/src/pages${componentFileName}";`);
+        // Re-export the optional `meta` named export under a deterministic alias.
+        // Importing a non-existent named export is a no-op in module systems we
+        // target (Rspack/Babel compile to undefined when missing), but to stay
+        // safe across loaders we wrap each meta import in its own module via
+        // import * as.
+        pagesExports.push(`import * as ${page.component}__module from "${projectDirectory}/src/pages${componentFileName}";`);
+        pagesExports.push(`export const ${page.component}__meta = ${page.component}__module.meta || null;`);
     });
 
     // Layout exports
     layoutTree.forEach(layout => {
         pagesExports.push(`export { default as ${layout.component} } from "${projectDirectory}/src/pages/${layout.file}";`);
+        pagesExports.push(`export const ${layout.component}__meta = null;`);
     });
 
     // AppLayout
@@ -163,6 +171,7 @@ export async function buildRouter(aplos) {
     } else {
         pagesExports.push(`export { default as AppLayout } from "aplos/internal/passthrough-layout";`);
     }
+    pagesExports.push(`export const AppLayout__meta = null;`);
 
     // NoMatch (404)
     if (notFoundFile) {
@@ -170,6 +179,7 @@ export async function buildRouter(aplos) {
     } else {
         pagesExports.push(`export { default as NoMatch } from "aplos/internal/default-not-found";`);
     }
+    pagesExports.push(`export const NoMatch__meta = null;`);
 
     // CustomError (optional)
     if (errorFile) {
@@ -238,8 +248,9 @@ function findSpecialFile(pageDirectory, baseName, extensions) {
  */
 function generateRoutesFile(routeTree) {
     const names = collectComponentNames(routeTree);
+    const metaNames = names.map(n => `${n}__meta`);
     const lines = [];
-    lines.push(`import { ${names.join(', ')} } from './pages.js';`);
+    lines.push(`import { ${[...names, ...metaNames].join(', ')} } from './pages.js';`);
     lines.push('');
     lines.push(`export const routeTree = ${serializeRouteTree(routeTree)};`);
     return lines.join('\n') + '\n';
@@ -267,7 +278,10 @@ function serializeRouteTree(nodes, indent = '') {
     const inner = indent + '  ';
     const items = nodes.map(node => {
         const parts = [];
-        if (node.component) parts.push(`${inner}element: ${node.component}`);
+        if (node.component) {
+            parts.push(`${inner}element: ${node.component}`);
+            parts.push(`${inner}meta: ${node.component}__meta`);
+        }
         if (node.path !== undefined) parts.push(`${inner}path: ${JSON.stringify(node.path)}`);
         if (node.static === true) parts.push(`${inner}static: true`);
         if (node.children) {

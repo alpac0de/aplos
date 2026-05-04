@@ -85,6 +85,29 @@ public/dist/products/42.html
 public/dist/products/43.html
 ```
 
+## Per-route metadata
+
+Each static page can export a `meta` object to set its `<title>`, description,
+canonical URL, Open Graph and Twitter Card tags. The values are extracted at
+build time and injected directly into the pre-rendered HTML.
+
+```tsx
+// src/pages/about.tsx
+"use static";
+
+export const meta = {
+  title: "About — Acme",
+  description: "Learn about Acme.",
+  og: { type: "website", image: "/og.png" },
+};
+
+export default function About() {
+  return <h1>About</h1>;
+}
+```
+
+See the full reference in [Per-route metadata](api/meta.md).
+
 ## When to use static rendering
 
 **Good fits:**
