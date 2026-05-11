@@ -116,8 +116,20 @@ export async function buildRouter(aplos) {
             console.warn(`Route config: paths for "${entry.source}" must be an array or a function returning one.`);
             continue;
         }
-        for (const concretePath of paths) {
-            if (typeof concretePath !== 'string' || !concretePath.startsWith('/')) {
+        for (const rawEntry of paths) {
+            let concretePath;
+            let inlineMeta = null;
+            if (typeof rawEntry === 'string') {
+                concretePath = rawEntry;
+            } else if (rawEntry && typeof rawEntry === 'object' && typeof rawEntry.path === 'string') {
+                concretePath = rawEntry.path;
+                if (rawEntry.meta && typeof rawEntry.meta === 'object') {
+                    inlineMeta = rawEntry.meta;
+                }
+            } else {
+                continue;
+            }
+            if (!concretePath.startsWith('/')) {
                 continue;
             }
             if (pages.find(p => p.path === concretePath)) {
@@ -129,6 +141,8 @@ export async function buildRouter(aplos) {
                 file: catchAll.file,
                 requirement: {},
                 static: true,
+                sourcePath: entry.source,
+                inlineMeta,
             });
         }
     }
@@ -280,9 +294,14 @@ function serializeRouteTree(nodes, indent = '') {
         const parts = [];
         if (node.component) {
             parts.push(`${inner}element: ${node.component}`);
-            parts.push(`${inner}meta: ${node.component}__meta`);
+            if (node.inlineMeta) {
+                parts.push(`${inner}meta: ${JSON.stringify(node.inlineMeta)}`);
+            } else {
+                parts.push(`${inner}meta: ${node.component}__meta`);
+            }
         }
         if (node.path !== undefined) parts.push(`${inner}path: ${JSON.stringify(node.path)}`);
+        if (node.sourcePath) parts.push(`${inner}sourcePath: ${JSON.stringify(node.sourcePath)}`);
         if (node.static === true) parts.push(`${inner}static: true`);
         if (node.children) {
             parts.push(`${inner}children: ${serializeRouteTree(node.children, inner)}`);
@@ -469,6 +488,12 @@ function buildNestedRoutes(pages, layoutTree) {
             const node = { path: page.path, component: page.component };
             if (page.static) {
                 node.static = true;
+            }
+            if (page.sourcePath) {
+                node.sourcePath = page.sourcePath;
+            }
+            if (page.inlineMeta) {
+                node.inlineMeta = page.inlineMeta;
             }
             nodes.push(node);
         });
