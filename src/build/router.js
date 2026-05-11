@@ -165,12 +165,16 @@ export async function buildRouter(aplos) {
         const componentFileName = page.file.replace('~', '');
         pagesExports.push(`export { default as ${page.component} } from "${projectDirectory}/src/pages${componentFileName}";`);
         // Re-export the optional `meta` named export under a deterministic alias.
-        // Importing a non-existent named export is a no-op in module systems we
-        // target (Rspack/Babel compile to undefined when missing), but to stay
-        // safe across loaders we wrap each meta import in its own module via
-        // import * as.
-        pagesExports.push(`import * as ${page.component}__module from "${projectDirectory}/src/pages${componentFileName}";`);
-        pagesExports.push(`export const ${page.component}__meta = ${page.component}__module.meta || null;`);
+        // Only emit the namespace import when the source file actually exports
+        // `meta` — otherwise rspack/webpack fires an ESModulesLinkingWarning
+        // per page that doesn't opt in, drowning real warnings on large sites.
+        const absolutePageFile = `${pageDirectory}${componentFileName}`;
+        if (pageHasMetaExport(absolutePageFile)) {
+            pagesExports.push(`import * as ${page.component}__module from "${projectDirectory}/src/pages${componentFileName}";`);
+            pagesExports.push(`export const ${page.component}__meta = ${page.component}__module.meta || null;`);
+        } else {
+            pagesExports.push(`export const ${page.component}__meta = null;`);
+        }
     });
 
     // Layout exports
@@ -327,6 +331,46 @@ function generateHeadFile(head, reactStrictMode) {
     lines.push(`export default ${JSON.stringify(headObj, null, 2)};`);
     lines.push(`export const reactStrictMode = ${!!reactStrictMode};`);
     return lines.join('\n') + '\n';
+}
+
+/**
+ * Detect whether a page module exports a `meta` named binding. Used by the
+ * router generator to decide whether to emit the `import * as ...__module`
+ * re-export pair (rspack warns on namespace access for missing named exports).
+ *
+ * We use a deliberately permissive regex: false positives only emit the same
+ * code we used to emit unconditionally — no harm done. The patterns covered:
+ *   export const meta
+ *   export let meta
+ *   export var meta
+ *   export function meta
+ *   export async function meta
+ *   export { meta }   (also { meta as ... } / { foo as meta })
+ *
+ * Exports inside line/block comments are filtered out before scanning so
+ * commented-out examples in the source don't trigger a match.
+ *
+ * @param {string} filePath
+ * @returns {boolean}
+ */
+function pageHasMetaExport(filePath) {
+    let source;
+    try {
+        source = fs.readFileSync(filePath, 'utf-8');
+    } catch (error) {
+        return false;
+    }
+    // Strip block and line comments to avoid matching commented-out exports.
+    const stripped = source
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+    if (/export\s+(?:const|let|var|function|async\s+function)\s+meta\b/.test(stripped)) {
+        return true;
+    }
+    if (/export\s*\{[^}]*\bmeta\b[^}]*\}/.test(stripped)) {
+        return true;
+    }
+    return false;
 }
 
 /**
