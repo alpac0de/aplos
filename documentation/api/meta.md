@@ -76,6 +76,63 @@ Pages rendered as a SPA (no static directive) do not get build-time meta. For
 those, use the runtime `aplos/head` component to set tags from inside your
 React tree.
 
+## Per-instance meta for dynamic routes
+
+A page that is expanded across many concrete URLs via the `paths` config (for
+example, a docs catch-all `/documentation/[...path]`) shares one component
+file — so a single static `meta` object would apply to every URL. To give each
+URL its own metadata, use one of the two forms below.
+
+### Function form
+
+Export `meta` as a function. Aplos calls it once per concrete URL during the
+static render, passing the URL and the route params extracted from the page's
+source pattern.
+
+```tsx
+// src/pages/documentation/[...path].tsx
+"use static";
+
+export const meta = (url, params) => ({
+  title: `${getDocTitle(params.path)} — Acme Docs`,
+  description: getDocSummary(params.path),
+  canonical: `https://acme.example${url}`,
+});
+
+export default function DocPage() { /* … */ }
+```
+
+`params` keys come from the bracketed segments of the route source: `[slug]`
+becomes `params.slug`, `[...path]` becomes `params.path` (joined with `/`).
+
+### Inline meta on `paths` entries
+
+Alternatively, declare the meta next to each path in `aplos.config.js`. Each
+entry can be a string (just the path) or an object `{ path, meta }`:
+
+```js
+// aplos.config.js
+export default {
+  routes: [
+    {
+      source: '/documentation/[...path]',
+      paths: () => walkDocs().map(slug => ({
+        path: `/documentation/${slug}`,
+        meta: {
+          title: `${titleFor(slug)} — Acme Docs`,
+          description: summaryFor(slug),
+          canonical: `https://acme.example/documentation/${slug}`,
+        },
+      })),
+    },
+  ],
+};
+```
+
+Inline `meta` wins over the component-level `meta` export when both are
+present. Strings in `paths` still work and fall back to the component-level
+`meta`.
+
 ## Combining with global head defaults
 
 `aplos.config.js` lets you set global head defaults (default title, viewport,
