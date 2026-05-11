@@ -39,4 +39,31 @@ export function getStaticRoutes({ forceAll = false } = {}) {
     return Array.from(new Set(acc));
 }
 
-export default { render, getStaticRoutes };
+function findRouteModule(nodes, url) {
+    for (const node of nodes) {
+        if (node.children) {
+            const found = findRouteModule(node.children, url);
+            if (found) return found;
+        }
+        if (node.path !== undefined && node.path === url) {
+            return node;
+        }
+    }
+    return null;
+}
+
+/**
+ * Return the `meta` export of the page module matching `url`, if any.
+ * Pages opt in by exporting `export const meta = { title, description, ... }`.
+ * @param {string} url
+ * @returns {object|null}
+ */
+export function getRouteMeta(url) {
+    const node = findRouteModule(routeTree, url);
+    if (!node || !node.meta) {
+        return null;
+    }
+    return node.meta;
+}
+
+export default { render, getStaticRoutes, getRouteMeta };
