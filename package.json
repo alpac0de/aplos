@@ -75,6 +75,7 @@
   "exports": {
     "./config": "./src/config.js",
     "./navigation": "./src/components/navigation.jsx",
-    "./head": "./src/components/head.jsx"
+    "./head": "./src/components/head.jsx",
+    "./redirect": "./src/runtime/redirect.js"
   }
 }

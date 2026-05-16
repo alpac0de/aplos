@@ -60,7 +60,8 @@ docs/
 ├── routing/
 │   ├── file-based.md             # File-based routing
 │   ├── dynamic-routes.md         # Dynamic routes
-│   └── layouts.md                # Layouts system
+│   ├── layouts.md                # Layouts system
+│   └── middleware.md             # Route middleware (auth guards, redirects)
 ├── configuration/
 │   ├── overview.md               # Configuration overview
 │   ├── runtime.md                # Runtime configuration
