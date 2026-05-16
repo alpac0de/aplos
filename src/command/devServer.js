@@ -3,7 +3,6 @@ import fs from "fs";
 import { rspack } from "@rspack/core";
 import { RspackDevServer } from "@rspack/dev-server";
 import {buildRouter} from "../build/router.js";
-import chokidar from "chokidar";
 import get_config from "../build/config.js";
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
@@ -100,60 +99,12 @@ export default async () => {
     );
     let projectDirectory = process.cwd();
 
-    // Debounce mechanism to batch rapid file changes
-    let buildTimeout = null;
-    let pendingChanges = [];
-
-    const scheduleBuild = (reason, filePath = null) => {
-        if (filePath) {
-            pendingChanges.push(filePath);
-        }
-
-        if (buildTimeout) {
-            clearTimeout(buildTimeout);
-        }
-
-        buildTimeout = setTimeout(async () => {
-            pendingChanges = [];
-            buildTimeout = null;
-
-            const startTime = Date.now();
-            console.log(`\x1b[36m⚡ Rebuilding...\x1b[0m ${reason}`);
-
-            await buildRouter(config);
-
-            const duration = Date.now() - startTime;
-            console.log(`\x1b[32m✓ Built in ${duration}ms\x1b[0m`);
-        }, 100); // 100ms debounce
-    };
-
     // Initial build
     const startTime = Date.now();
     console.log('\x1b[36m⚡ Building routes...\x1b[0m');
     const buildStart = performance.now();
     await buildRouter(config);
     console.log(`\x1b[32m✓ Ready in ${Date.now() - startTime}ms\x1b[0m`);
-
-    const watcher = chokidar.watch(projectDirectory + "/src", {
-        ignored: /(^|[\/\\])\../, // ignore dotfiles
-        persistent: true,
-        ignoreInitial: true, // Don't trigger 'add' for existing files
-    });
-
-    watcher.on("change", (filePath) => {
-        const relativePath = filePath.replace(projectDirectory, '');
-        scheduleBuild(`\x1b[90m${relativePath}\x1b[0m`, filePath);
-    });
-
-    watcher.on("add", (filePath) => {
-        const relativePath = filePath.replace(projectDirectory, '');
-        scheduleBuild(`\x1b[33m+ ${relativePath}\x1b[0m`, filePath);
-    });
-
-    watcher.on("unlink", (filePath) => {
-        const relativePath = filePath.replace(projectDirectory, '');
-        scheduleBuild(`\x1b[31m- ${relativePath}\x1b[0m`, filePath);
-    });
 
     let runtime_dir = __dirname + "/..";
 
@@ -162,6 +113,30 @@ export default async () => {
     rspackConfig.entry = [runtime_dir + "/runtime/app.jsx"];
 
     const compiler = rspack(rspackConfig);
+
+    // Regenerate the router cache only when a page file is added or removed.
+    const pagesDir = path.join(projectDirectory, "src", "pages");
+    const touchesPages = (files) => {
+        if (!files) return false;
+        for (const f of files) {
+            if (f && f.startsWith(pagesDir)) return true;
+        }
+        return false;
+    };
+
+    let routerReady = Promise.resolve();
+    compiler.hooks.watchRun.tapPromise("aplos-router", async (c) => {
+        const added = c.modifiedFiles;
+        const removed = c.removedFiles;
+        if (!added && !removed) return;
+        if (!touchesPages(added) && !touchesPages(removed)) return;
+
+        const startTime = Date.now();
+        console.log(`\x1b[36m⚡ Rebuilding routes...\x1b[0m`);
+        routerReady = buildRouter(config);
+        await routerReady;
+        console.log(`\x1b[32m✓ Built in ${Date.now() - startTime}ms\x1b[0m`);
+    });
 
     let isFirstCompilation = true;
     compiler.hooks.done.tap('aplos-startup', () => {

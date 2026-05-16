@@ -44,7 +44,6 @@
     "autoprefixer": "^10.4.21",
     "babel-loader": "^10.0.0",
     "babel-plugin-react-compiler": "19.1.0-rc.3",
-    "chokidar": "^4.0.3",
     "cli-table3": "^0.6.5",
     "commander": "^14.0.0",
     "css-loader": "^7.1.2",

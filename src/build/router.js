@@ -215,28 +215,30 @@ export async function buildRouter(aplos) {
     // Generate head.js
     const headFileContent = generateHeadFile(aplos.head || {}, aplos.reactStrictMode);
 
-    // Ensure cache directory exists and write files
+    // Write each cache file only when its content changed (writeIfChanged)
+    // so an unchanged router cache keeps a stable mtime and doesn't trigger
+    // a full reload.
     try {
         const cacheDir = path.join(projectDirectory, '.aplos', 'cache');
         await fs.promises.mkdir(cacheDir, { recursive: true });
 
-        await fs.promises.writeFile(
+        await writeIfChanged(
             path.join(cacheDir, 'router.js'),
             JSON.stringify(routes)
         );
-        await fs.promises.writeFile(
+        await writeIfChanged(
             path.join(cacheDir, 'pages.js'),
             pagesExports.join('\n') + '\n'
         );
-        await fs.promises.writeFile(
+        await writeIfChanged(
             path.join(cacheDir, 'routes.js'),
             routesFileContent
         );
-        await fs.promises.writeFile(
+        await writeIfChanged(
             path.join(cacheDir, 'head.js'),
             headFileContent
         );
-        await fs.promises.writeFile(
+        await writeIfChanged(
             path.join(cacheDir, 'config.js'),
             `export default ${JSON.stringify(aplos, null, 2)};`
         );
@@ -244,6 +246,28 @@ export async function buildRouter(aplos) {
         console.error('Failed to write cache files:', error.message);
         throw error;
     }
+}
+
+/**
+ * Write `content` to `filePath` only when it differs from disk, keeping the
+ * mtime stable when nothing changed.
+ *
+ * @param {string} filePath
+ * @param {string} content
+ * @returns {Promise<void>}
+ */
+async function writeIfChanged(filePath, content) {
+    try {
+        const existing = await fs.promises.readFile(filePath, 'utf-8');
+        if (existing === content) {
+            return;
+        }
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            throw error;
+        }
+    }
+    await fs.promises.writeFile(filePath, content);
 }
 
 /**
