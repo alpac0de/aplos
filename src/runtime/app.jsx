@@ -97,11 +97,27 @@ function App() {
 }
 
 const container = document.getElementById('root');
-const root = createRoot(container);
 
-if (reactStrictMode) {
-    const { StrictMode } = React;
-    root.render(<StrictMode><App /></StrictMode>);
-} else {
-    root.render(<App />);
+// Reuse the React root across hot updates so HMR re-renders instead of
+// recreating the root (which would force a full reload).
+const root =
+    (module.hot && module.hot.data && module.hot.data.root) || createRoot(container);
+
+function render() {
+    if (reactStrictMode) {
+        const { StrictMode } = React;
+        root.render(<StrictMode><App /></StrictMode>);
+    } else {
+        root.render(<App />);
+    }
+}
+
+render();
+
+if (module.hot) {
+    // Accept updates here so React Refresh commits them without a full reload.
+    module.hot.accept();
+    module.hot.dispose((data) => {
+        data.root = root;
+    });
 }
