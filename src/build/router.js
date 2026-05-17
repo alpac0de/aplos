@@ -152,6 +152,12 @@ export async function buildRouter(aplos) {
     const notFoundFile = findSpecialFile(pageDirectory, '_404', appExtensions);
     const errorFile = findSpecialFile(pageDirectory, '_error', appExtensions);
 
+    // Detect the optional route middleware at src/middleware.{ts,tsx,js,jsx}.
+    // Lives next to src/pages (project-level), not inside it, so it never
+    // becomes a route. Resolved at runtime via the @aplos_middleware alias.
+    const srcDirectory = path.join(projectDirectory, 'src');
+    const middlewareFile = findSpecialFile(srcDirectory, 'middleware', appExtensions);
+
     // Generate pages.js (re-exports for all pages + special files). Pages
     // expanded from `routes[].paths` reuse the same component as their
     // catch-all parent, so we dedupe exports by component name here.
@@ -215,6 +221,12 @@ export async function buildRouter(aplos) {
     // Generate head.js
     const headFileContent = generateHeadFile(aplos.head || {}, aplos.reactStrictMode);
 
+    // Generate middleware.js — re-export the project middleware as default, or
+    // fall back to the framework no-op so the runtime import always resolves.
+    const middlewareFileContent = middlewareFile
+        ? `export { default } from "${projectDirectory}/src/${middlewareFile}";\n`
+        : `export { default } from "aplos/internal/default-middleware";\n`;
+
     // Write each cache file only when its content changed (writeIfChanged)
     // so an unchanged router cache keeps a stable mtime and doesn't trigger
     // a full reload.
@@ -237,6 +249,10 @@ export async function buildRouter(aplos) {
         await writeIfChanged(
             path.join(cacheDir, 'head.js'),
             headFileContent
+        );
+        await writeIfChanged(
+            path.join(cacheDir, 'middleware.js'),
+            middlewareFileContent
         );
         await writeIfChanged(
             path.join(cacheDir, 'config.js'),

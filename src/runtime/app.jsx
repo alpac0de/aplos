@@ -8,6 +8,7 @@ import headConfig, { reactStrictMode } from '@aplos_head';
 
 import ErrorBoundary from './ErrorBoundary.jsx';
 import DefaultErrorPage from './DefaultErrorPage.jsx';
+import MiddlewareGate from './MiddlewareGate.jsx';
 
 const MANAGED_ATTR = "data-head-default";
 
@@ -86,10 +87,12 @@ function App() {
             <HeadDefaults />
             <ErrorBoundary errorComponent={ErrorComponent}>
                 <BrowserRouter>
-                    <Routes>
-                        {renderRoutes(routeTree)}
-                        <Route path="*" element={createElement(NoMatch)} />
-                    </Routes>
+                    <MiddlewareGate>
+                        <Routes>
+                            {renderRoutes(routeTree)}
+                            <Route path="*" element={createElement(NoMatch)} />
+                        </Routes>
+                    </MiddlewareGate>
                 </BrowserRouter>
             </ErrorBoundary>
         </>

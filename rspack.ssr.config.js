@@ -108,6 +108,11 @@ const frameworkConfig = {
       "aplos/config": path.resolve(__dirname, "src/config.js"),
       "aplos/navigation": path.resolve(__dirname, "src/components/navigation.jsx"),
       "aplos/head": path.resolve(__dirname, "src/components/head.jsx"),
+      // Route middleware does not run during static rendering, but a shared
+      // module may still import `redirect`. Resolve it so the SSG build does
+      // not fail on a missing module — the sentinel is inert without the
+      // client MiddlewareGate.
+      "aplos/redirect": path.resolve(__dirname, "src/runtime/redirect.js"),
       "@": projectDirectory + "/src",
       "~": projectDirectory + "/src",
       "@aplos_config": projectDirectory + "/.aplos/cache/config.js",
