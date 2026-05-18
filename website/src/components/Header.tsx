@@ -31,6 +31,9 @@ export default function Header() {
           <NavLink to="/documentation" onClick={() => setMenuOpen(false)}>
             Documentation
           </NavLink>
+          <NavLink to="/help" onClick={() => setMenuOpen(false)}>
+            Help
+          </NavLink>
           <a
             href="https://github.com/alpac0de/aplos"
             target="_blank"

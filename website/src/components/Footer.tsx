@@ -8,6 +8,7 @@ export default function Footer() {
         <span>&copy; {new Date().getFullYear()} Aplos by <a href="https://alpacode.fr" target="_blank" rel="noopener noreferrer">alpacode</a>. MIT License.</span>
         <div className="footer-links">
           <Link to="/documentation">Documentation</Link>
+          <Link to="/help">Help</Link>
           <a
             href="https://github.com/alpac0de/aplos"
             target="_blank"
