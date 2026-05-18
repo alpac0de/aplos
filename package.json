@@ -25,6 +25,17 @@
   "bin": {
     "aplos": "bin/aplos"
   },
+  "files": [
+    "bin/",
+    "src/",
+    "templates/",
+    "create-aplos/",
+    "rspack.config.js",
+    "rspack.ssr.config.js",
+    "postcss.config.js",
+    "aplos.config.dist.js",
+    "README.md"
+  ],
   "scripts": {
     "dev": "bin/aplos server",
     "test": "bun test",
