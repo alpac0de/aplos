@@ -38,10 +38,10 @@ module.exports = {
     defaultTitle: 'Aplos - The Fast React Framework',
     titleTemplate: '%s | Aplos',
     meta: [
-      { name: 'description', content: 'A fast, file-based React framework powered by Rspack. Build modern React apps with automatic routing, nested layouts, and lightning-fast builds.' },
+      { name: 'description', content: 'Aplos helps you create high-quality React applications with less effort and faster builds.' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { property: 'og:title', content: 'Aplos - The Fast React Framework' },
-      { property: 'og:description', content: 'Build modern React apps with file-based routing, nested layouts, and lightning-fast builds.' },
+      { property: 'og:description', content: 'Aplos helps you create high-quality React applications with less effort and faster builds.' },
       { property: 'og:type', content: 'website' },
     ],
     link: [

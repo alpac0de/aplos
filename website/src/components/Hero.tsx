@@ -2,16 +2,16 @@ import { Link } from 'aplos/navigation';
 import CopyButton from './CopyButton';
 import '@/styles/components/hero.css';
 
-const INSTALL_CMD = 'bun add aplos react react-dom react-router-dom';
+const INSTALL_CMD = 'bun add aplosjs react react-dom react-router-dom';
 
 export default function Hero() {
   return (
     <section className="hero">
       <div className="hero-inner">
-        <h1>The fast, file-based React framework</h1>
+        <h1>The React Framework for building quality apps, fast</h1>
         <p className="hero-subtitle">
-          Build modern React apps with automatic routing, nested layouts,
-          and lightning-fast builds powered by Rspack.
+          Aplos helps you create high-quality React applications
+          with less effort and faster builds.
         </p>
 
         <div className="hero-install">
