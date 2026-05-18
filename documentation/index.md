@@ -27,13 +27,13 @@ bun dev
 
 ## Get started
 
-- [Installation](getting-started/installation.md) — prerequisites and one-line scaffolding.
-- [Quick start](getting-started/quick-start.md) — your first Aplos app in 4 steps.
-- [Static rendering](static-rendering.md) — pre-render pages to HTML for SEO and instant first paint.
+- [Installation](/documentation/getting-started/installation) — prerequisites and one-line scaffolding.
+- [Quick start](/documentation/getting-started/quick-start) — your first Aplos app in 4 steps.
+- [Static rendering](/documentation/static-rendering) — pre-render pages to HTML for SEO and instant first paint.
 
 ## Compare with alternatives
 
-See how Aplos stacks up against [Next.js, Astro and Vite + React](comparison.md).
+See how Aplos stacks up against [Next.js, Astro and Vite + React](/documentation/comparison).
 
 ## Help
 

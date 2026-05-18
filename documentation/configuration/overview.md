@@ -139,7 +139,7 @@ export default {
 | `link` | Array of link tag attributes |
 | `script` | Array of script tag attributes |
 
-You can override head tags per-page using the `Head` component. See [API Reference](../api/components.md#head) for details.
+You can override head tags per-page using the `Head` component. See [API Reference](/documentation/api/components#head) for details.
 
 ## Routes Configuration
 
@@ -160,4 +160,4 @@ module.exports = {
 }
 ```
 
-See [Dynamic Routes](../routing/dynamic-routes.md#route-configuration-with-requirements) for more details on route requirements.
+See [Dynamic Routes](/documentation/routing/dynamic-routes#route-configuration-with-requirements) for more details on route requirements.

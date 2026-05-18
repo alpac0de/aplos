@@ -40,7 +40,7 @@ bun add aplosjs
 bun add react@19 react-dom@19 react-router-dom@7
 ```
 
-Then create a `src/pages/` directory and your first page (see [Quick start](quick-start.md)).
+Then create a `src/pages/` directory and your first page (see [Quick start](/documentation/getting-started/quick-start)).
 
 ## Verify
 

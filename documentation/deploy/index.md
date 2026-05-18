@@ -4,14 +4,14 @@ Aplos builds plain static assets (HTML, JS, CSS) to `public/dist/`. There's no s
 
 ## Recommended workflow
 
-1. Mark pages that should be pre-rendered with `"use static"` (see [Static rendering](../static-rendering.md)).
+1. Mark pages that should be pre-rendered with `"use static"` (see [Static rendering](/documentation/static-rendering)).
 2. Build with `bun run build --static`.
 3. Upload `public/dist/` to your host.
 
 ## Guides
 
-- [GitHub Pages](github-pages.md) — free, integrates with GitHub Actions, used by aplos.alpacode.io itself.
-- [Other static hosts](static-host.md) — Netlify, Vercel, Cloudflare Pages, nginx, S3 + CloudFront.
+- [GitHub Pages](/documentation/deploy/github-pages) — free, integrates with GitHub Actions, used by aplos.alpacode.io itself.
+- [Other static hosts](/documentation/deploy/static-host) — Netlify, Vercel, Cloudflare Pages, nginx, S3 + CloudFront.
 
 ## Choosing a host
 

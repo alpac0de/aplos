@@ -41,7 +41,7 @@ Output lands in `public/dist/` — plain HTML, JS and CSS ready to deploy to any
 
 ## Next steps
 
-- [Static rendering](../static-rendering.md) — pre-render pages to HTML for SEO and instant first paint.
-- [File-based routing](../routing/file-based.md) — dynamic and catch-all routes.
-- [Layouts](../routing/layouts.md) — share UI between pages.
-- [Deploy](../deploy/github-pages.md) — ship your app.
+- [Static rendering](/documentation/static-rendering) — pre-render pages to HTML for SEO and instant first paint.
+- [File-based routing](/documentation/routing/file-based) — dynamic and catch-all routes.
+- [Layouts](/documentation/routing/layouts) — share UI between pages.
+- [Deploy](/documentation/deploy/github-pages) — ship your app.

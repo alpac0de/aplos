@@ -4,7 +4,7 @@ Aplos ships with a small CLI. All commands are available via `aplos`, `bunx aplo
 
 ## `aplos create <name>`
 
-Scaffold a new Aplos project. See the [dedicated guide](create.md).
+Scaffold a new Aplos project. See the [dedicated guide](/documentation/cli/create).
 
 ```bash
 aplos create my-app
@@ -59,7 +59,7 @@ Output goes to `public/dist/`.
 | Flag | Description |
 |---|---|
 | `--mode <mode>` | Sets the build mode. Defaults to `development`; pass `production` for optimized output. |
-| `--static` | Pre-render opt-in pages to static HTML (SSG). See [Static rendering](../static-rendering.md). |
+| `--static` | Pre-render opt-in pages to static HTML (SSG). See [Static rendering](/documentation/static-rendering). |
 
 **Examples:**
 

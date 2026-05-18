@@ -106,7 +106,7 @@ export default function About() {
 }
 ```
 
-See the full reference in [Per-route metadata](api/meta.md).
+See the full reference in [Per-route metadata](/documentation/api/meta).
 
 ## When to use static rendering
 

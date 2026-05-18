@@ -135,7 +135,7 @@ module.exports = {
 }
 ```
 
-See [Runtime Configuration](../configuration/runtime.md) for more details.
+See [Runtime Configuration](/documentation/configuration/runtime) for more details.
 
 ## React Router Hooks
 
