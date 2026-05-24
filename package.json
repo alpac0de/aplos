@@ -84,9 +84,21 @@
     "react-router-dom": "^7.0.0"
   },
   "exports": {
-    "./config": "./src/config.js",
-    "./navigation": "./src/components/navigation.jsx",
-    "./head": "./src/components/head.jsx",
-    "./redirect": "./src/runtime/redirect.js"
+    "./config": {
+      "types": "./src/config.d.ts",
+      "default": "./src/config.js"
+    },
+    "./navigation": {
+      "types": "./src/components/navigation.d.ts",
+      "default": "./src/components/navigation.jsx"
+    },
+    "./head": {
+      "types": "./src/components/head.d.ts",
+      "default": "./src/components/head.jsx"
+    },
+    "./redirect": {
+      "types": "./src/runtime/redirect.d.ts",
+      "default": "./src/runtime/redirect.js"
+    }
   }
 }
