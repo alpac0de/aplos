@@ -9,6 +9,17 @@ const __dirname = path.dirname(__filename);
 
 const projectDirectory = process.cwd();
 
+// Anchor the SSR persistent cache under $XDG_CACHE_HOME/aplos when available so
+// it survives across PaaS deploys (rspack defaults to node_modules/.cache and
+// ignores XDG). Separate key from the client cache so they never collide. See
+// the matching helper in rspack.config.js for the full rationale.
+function rspackCacheDir(key) {
+  const base = process.env.XDG_CACHE_HOME
+    ? path.join(process.env.XDG_CACHE_HOME, "aplos")
+    : path.join(projectDirectory, "node_modules", ".cache", "aplos");
+  return path.join(base, key);
+}
+
 // Inherit project aliases/loaders from the client config (e.g. `@docs` alias,
 // `.md` loader). A dedicated `rspack.ssr.config.js` in the project can override.
 let userConfig = {};
@@ -37,6 +48,16 @@ const frameworkConfig = {
   devtool: false,
   stats: "errors-warnings",
   infrastructureLogging: { level: "error" },
+  cache: {
+    type: "filesystem",
+    storage: {
+      type: "filesystem",
+      directory: rspackCacheDir("rspack-ssr"),
+    },
+    buildDependencies: {
+      config: [path.resolve(__dirname, "rspack.ssr.config.js")],
+    },
+  },
   output: {
     path: path.resolve(projectDirectory, "./.aplos/cache"),
     filename: "ssr-bundle.cjs",

@@ -25,3 +25,7 @@ Aplos builds plain static assets (HTML, JS, CSS) to `public/dist/`. There's no s
 | **Self-hosted nginx** | Server cost | Configurable | Full control |
 
 If you don't have strong preferences, GitHub Pages is the simplest path when you're already on GitHub.
+
+## Faster CI builds
+
+Aplos caches build artifacts on disk. By default the cache lives in `node_modules/.cache/aplos/`, but set `XDG_CACHE_HOME` to a persisted directory and the cache survives across builds — every deploy after the first becomes a warm build. See [Build cache](/documentation/configuration/rspack#build-cache) for details.
