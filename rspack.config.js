@@ -12,6 +12,20 @@ const __dirname = path.dirname(__filename);
 const isDevelopment = process.env.NODE_ENV !== "production";
 const projectDirectory = process.cwd();
 
+// Rspack's persistent cache defaults to node_modules/.cache/rspack and does NOT
+// honour XDG_CACHE_HOME. On PaaS builders that persist a cache volume via
+// XDG_CACHE_HOME (e.g. Kemeter mounts it at /opt/build-cache), the default
+// location is wiped on every deploy → every deploy is a cold build. Anchor the
+// cache under $XDG_CACHE_HOME/aplos when available so it survives across
+// deploys; fall back to node_modules/.cache locally. `key` keeps the client and
+// SSR caches in separate directories so they never invalidate each other.
+function rspackCacheDir(key) {
+  const base = process.env.XDG_CACHE_HOME
+    ? path.join(process.env.XDG_CACHE_HOME, "aplos")
+    : path.join(projectDirectory, "node_modules", ".cache", "aplos");
+  return path.join(base, key);
+}
+
 // Determine HTML template path
 // Priority: 1. public/index.html (user override), 2. default template
 const defaultTemplate = path.resolve(__dirname, "./src/client/public/index.html");
@@ -170,6 +184,10 @@ const frameworkConfig = {
   devtool: isDevelopment ? "eval-source-map" : "hidden-source-map",
   cache: {
     type: "filesystem",
+    storage: {
+      type: "filesystem",
+      directory: rspackCacheDir("rspack-client"),
+    },
     buildDependencies: {
       config: [path.resolve(__dirname, "rspack.config.js")],
     },
