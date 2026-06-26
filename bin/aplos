@@ -5,9 +5,9 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const projectDir = process.cwd();
-config({ path: resolve(projectDir, ".env") });
+config({ path: resolve(projectDir, ".env"), quiet: true });
 if (existsSync(resolve(projectDir, ".env.local"))) {
-  config({ path: resolve(projectDir, ".env.local"), override: true });
+  config({ path: resolve(projectDir, ".env.local"), override: true, quiet: true });
 }
 
 import { Command } from "commander";

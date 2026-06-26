@@ -166,10 +166,13 @@ if (!isDevelopment && fs.existsSync(userPublicDir)) {
   );
 }
 
-// Load project's rspack.config.js if it exists
+// Load project's rspack.config.js if it exists.
+// Guard against self-import: when aplos runs inside its own repo, the cwd's
+// rspack.config.js IS this file. Importing it would create a circular ESM
+// dependency whose top-level await never settles, silently killing the process.
 let userConfig = {};
 const userConfigPath = path.resolve(projectDirectory, "rspack.config.js");
-if (fs.existsSync(userConfigPath)) {
+if (fs.existsSync(userConfigPath) && userConfigPath !== __filename) {
   try {
     const userModule = await import(pathToFileURL(userConfigPath).href);
     userConfig = userModule.default || userModule;
