@@ -10,6 +10,7 @@ Aplos builds plain static assets (HTML, JS, CSS) to `public/dist/`. There's no s
 
 ## Guides
 
+- [Kemeter](/documentation/deploy/kemeter) — the platform Aplos is built for. Git push to deploy, with the build cache persisted across deploys out of the box.
 - [GitHub Pages](/documentation/deploy/github-pages) — free, integrates with GitHub Actions, used by aplos.alpacode.io itself.
 - [Other static hosts](/documentation/deploy/static-host) — Netlify, Vercel, Cloudflare Pages, nginx, S3 + CloudFront.
 
@@ -17,6 +18,7 @@ Aplos builds plain static assets (HTML, JS, CSS) to `public/dist/`. There's no s
 
 | Host | Cost | SPA fallback | Best for |
 |---|---|---|---|
+| **Kemeter** | Free tier | Built-in | The platform Aplos is built for, with git push to deploy and a persistent build cache |
 | **GitHub Pages** | Free | Manual (404.html copy) | Open source, docs, marketing |
 | **Netlify** | Free tier | Built-in | Quick deploys, branch previews |
 | **Vercel** | Free tier | Built-in | Same |
@@ -24,7 +26,7 @@ Aplos builds plain static assets (HTML, JS, CSS) to `public/dist/`. There's no s
 | **S3 + CloudFront** | Pay per use | Configurable | Enterprise, custom CDN setup |
 | **Self-hosted nginx** | Server cost | Configurable | Full control |
 
-If you don't have strong preferences, GitHub Pages is the simplest path when you're already on GitHub.
+[Kemeter](/documentation/deploy/kemeter) is the platform Aplos is built for, so you get git push to deploy with the build cache persisted out of the box. It's the smoothest path if you don't have strong preferences, and if you're already on GitHub, GitHub Pages is the simplest alternative.
 
 ## Faster CI builds
 
