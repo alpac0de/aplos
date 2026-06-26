@@ -27,7 +27,7 @@ const FOLDER_ORDER = [
 const PAGE_ORDER: Record<string, string[]> = {
   'getting-started': ['installation', 'quick-start'],
   routing: ['file-based', 'dynamic-routes', 'layouts'],
-  deploy: ['github-pages', 'static-host'],
+  deploy: ['kemeter', 'github-pages', 'static-host'],
   cli: ['create', 'commands'],
   configuration: ['overview', 'runtime', 'rspack'],
 };

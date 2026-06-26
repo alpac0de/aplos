@@ -2,6 +2,8 @@
 
 Aplos's production build outputs plain HTML, JS, and CSS. It runs on any static file host: Netlify, Vercel, Cloudflare Pages, S3, nginx, Caddy, or your own server.
 
+Looking for the native platform Aplos is built for? See [Deploy to Kemeter](/documentation/deploy/kemeter), which builds and serves your app from a git push and keeps the build cache warm across deploys.
+
 ## Build
 
 ```bash
