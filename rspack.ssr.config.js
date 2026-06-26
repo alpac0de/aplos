@@ -33,7 +33,9 @@ if (fs.existsSync(userClientConfigPath)) {
   }
 }
 const userSSRConfigPath = path.resolve(projectDirectory, "rspack.ssr.config.js");
-if (fs.existsSync(userSSRConfigPath)) {
+// Guard against self-import (see rspack.config.js): inside aplos's own repo this
+// path IS the current file, and a circular ESM import would hang the process.
+if (fs.existsSync(userSSRConfigPath) && userSSRConfigPath !== __filename) {
   try {
     const userModule = await import(pathToFileURL(userSSRConfigPath).href);
     userConfig = merge(userConfig, userModule.default || userModule);
