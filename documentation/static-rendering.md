@@ -13,7 +13,7 @@ export default function About() {
 }
 ```
 
-When you run `bun run build --static`, Aplos emits `public/dist/about.html` containing the fully rendered HTML. Crawlers see the content. The browser displays it before any JavaScript runs.
+When you run `bun run build --static`, Aplos emits `dist/about.html` containing the fully rendered HTML. Crawlers see the content. The browser displays it before any JavaScript runs.
 
 ## Build with static rendering
 
@@ -35,9 +35,9 @@ Output:
 
 ```
 Pre-rendering 3 route(s)...
-  ✓ /          → public/dist/index.html
-  ✓ /about     → public/dist/about.html
-  ✓ /contact   → public/dist/contact.html
+  ✓ /          → dist/index.html
+  ✓ /about     → dist/about.html
+  ✓ /contact   → dist/contact.html
 ```
 
 ## Mix static and dynamic
@@ -79,10 +79,10 @@ export default {
 At build time, each combination is expanded into its own static HTML file:
 
 ```
-public/dist/blog/hello-world.html
-public/dist/blog/second-post.html
-public/dist/products/42.html
-public/dist/products/43.html
+dist/blog/hello-world.html
+dist/blog/second-post.html
+dist/products/42.html
+dist/products/43.html
 ```
 
 ## Per-route metadata

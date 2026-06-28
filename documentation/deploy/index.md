@@ -1,12 +1,12 @@
 # Deploy
 
-Aplos builds plain static assets (HTML, JS, CSS) to `public/dist/`. There's no server runtime to operate — pick any static host you prefer.
+Aplos builds plain static assets (HTML, JS, CSS) to `dist/`. There's no server runtime to operate — pick any static host you prefer.
 
 ## Recommended workflow
 
 1. Mark pages that should be pre-rendered with `"use static"` (see [Static rendering](/documentation/static-rendering)).
 2. Build with `bun run build --static`.
-3. Upload `public/dist/` to your host.
+3. Upload `dist/` to your host.
 
 ## Guides
 

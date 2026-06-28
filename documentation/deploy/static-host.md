@@ -10,10 +10,10 @@ Looking for the native platform Aplos is built for? See [Deploy to Kemeter](/doc
 bun run build --static
 ```
 
-The output is in `public/dist/`. Upload that directory's contents to the host.
+The output is in `dist/`. Upload that directory's contents to the host.
 
 ```
-public/dist/
+dist/
 ├── index.html
 ├── about.html
 ├── 404.html
@@ -25,10 +25,10 @@ public/dist/
 
 ## Netlify
 
-Drop the `public/dist/` folder onto netlify.com, or use the CLI:
+Drop the `dist/` folder onto netlify.com, or use the CLI:
 
 ```bash
-bunx netlify deploy --prod --dir public/dist
+bunx netlify deploy --prod --dir dist
 ```
 
 Or wire up Git deploys with a `netlify.toml`:
@@ -36,7 +36,7 @@ Or wire up Git deploys with a `netlify.toml`:
 ```toml
 [build]
   command = "bun run build --static"
-  publish = "public/dist"
+  publish = "dist"
 ```
 
 ## Vercel
@@ -50,7 +50,7 @@ Or commit a `vercel.json`:
 ```json
 {
   "buildCommand": "bun run build --static",
-  "outputDirectory": "public/dist"
+  "outputDirectory": "dist"
 }
 ```
 
@@ -59,17 +59,17 @@ Or commit a `vercel.json`:
 Connect your repository in the Cloudflare dashboard, then set:
 
 - **Build command:** `bun run build --static`
-- **Build output directory:** `public/dist`
+- **Build output directory:** `dist`
 
 ## nginx
 
-Serve `public/dist/` as the document root with a SPA fallback for client-side routes:
+Serve `dist/` as the document root with a SPA fallback for client-side routes:
 
 ```nginx
 server {
     listen 80;
     server_name example.com;
-    root /var/www/my-app/public/dist;
+    root /var/www/my-app/dist;
     index index.html;
 
     location / {
@@ -83,7 +83,7 @@ The `$uri.html` fallback serves pre-rendered pages (`/about` → `/about.html`) 
 ## S3 + CloudFront
 
 ```bash
-aws s3 sync public/dist s3://your-bucket --delete
+aws s3 sync dist s3://your-bucket --delete
 ```
 
 In CloudFront, configure a custom error response: 403/404 → `/index.html` with status 200, so client-side routes resolve.

@@ -34,7 +34,7 @@ export default function About() {
 }
 ```
 
-After `aplos build --static`, `public/dist/about.html` contains:
+After `aplos build --static`, `dist/about.html` contains:
 
 ```html
 <title>About — Acme</title>
