@@ -1,10 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { glob } from 'glob';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export async function buildRouter(aplos) {
     const appExtensions = ['.tsx', '.jsx', '.js'];
@@ -295,7 +291,7 @@ function findSpecialFile(pageDirectory, baseName, extensions) {
         .find(file => {
             try {
                 return fs.existsSync(path.join(pageDirectory, file));
-            } catch (error) {
+            } catch {
                 return false;
             }
         }) || null;
@@ -397,7 +393,7 @@ function pageHasMetaExport(filePath) {
     let source;
     try {
         source = fs.readFileSync(filePath, 'utf-8');
-    } catch (error) {
+    } catch {
         return false;
     }
     // Strip block and line comments to avoid matching commented-out exports.
@@ -436,7 +432,7 @@ function hasUseStaticDirective(filePath) {
             }
             return false;
         }
-    } catch (error) {
+    } catch {
         return false;
     }
     return false;
@@ -471,7 +467,7 @@ export async function getFiles(dirPath, extensions) {
  * @returns {string}
  */
 export function formatPath(path) {
-    return path.replace(/\.\.\./g, '').replace(/[\[\]_-]/g, '');
+    return path.replace(/\.\.\./g, '').replace(/[[\]_-]/g, '');
 }
 
 /**
@@ -496,7 +492,7 @@ function buildLayoutTree(pageDirectory, extensions) {
             .find(file => {
                 try {
                     return fs.existsSync(path.join(dir, file));
-                } catch (error) {
+                } catch {
                     return false;
                 }
             });
@@ -523,7 +519,7 @@ function buildLayoutTree(pageDirectory, extensions) {
                     newPathPrefix
                 );
             });
-        } catch (error) {
+        } catch {
             // Ignore directories we can't read
         }
     }
