@@ -1,5 +1,5 @@
 import React, { createElement, useEffect } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 import { Routes, BrowserRouter, Route } from 'react-router-dom';
 
 import { routeTree } from '@aplos_routes';
@@ -101,17 +101,41 @@ function App() {
 
 const container = document.getElementById('root');
 
-// Reuse the React root across hot updates so HMR re-renders instead of
-// recreating the root (which would force a full reload).
-const root =
-    (module.hot && module.hot.data && module.hot.data.root) || createRoot(container);
-
-function render() {
+function appElement() {
     if (reactStrictMode) {
         const { StrictMode } = React;
-        root.render(<StrictMode><App /></StrictMode>);
+        return <StrictMode><App /></StrictMode>;
+    }
+    return <App />;
+}
+
+// A `use static` build pre-renders the page HTML into `#root`. When that markup
+// is present we must hydrate it (attach to the existing DOM) rather than
+// createRoot (which discards the server markup and re-renders from scratch —
+// losing the SSG paint and risking a flash). An empty `#root` means a SPA-only
+// route or the dev server, where there is nothing to hydrate.
+//
+// Test for an element child rather than hasChildNodes(): a stray whitespace
+// text node from template formatting must not be mistaken for pre-rendered
+// markup, which would trigger hydration on an effectively empty root.
+const isPrerendered = container.firstElementChild !== null;
+
+// Reuse the React root across hot updates so HMR re-renders instead of
+// recreating the root (which would force a full reload).
+const hotRoot = module.hot && module.hot.data && module.hot.data.root;
+
+let root;
+function render() {
+    if (hotRoot) {
+        root = hotRoot;
+        root.render(appElement());
+    } else if (isPrerendered) {
+        // hydrateRoot takes the initial element at creation time; it does not
+        // need a separate render() call for the first commit.
+        root = hydrateRoot(container, appElement());
     } else {
-        root.render(<App />);
+        root = createRoot(container);
+        root.render(appElement());
     }
 }
 
