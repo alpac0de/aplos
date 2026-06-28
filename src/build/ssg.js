@@ -46,10 +46,10 @@ async function buildSSRBundle(projectDirectory, frameworkDirectory, mode) {
     });
 }
 
-export default async function ssg({ mode, forceAll = false } = {}) {
+export default async function ssg({ mode, forceAll = false, outDir } = {}) {
     const projectDirectory = process.cwd();
     const frameworkDirectory = path.resolve(__dirname, '../..');
-    const distDir = path.join(projectDirectory, 'public', 'dist');
+    const distDir = path.join(projectDirectory, outDir || process.env.APLOS_OUT_DIR || 'dist');
     const cacheDir = path.join(projectDirectory, '.aplos', 'cache');
 
     const indexHtmlPath = path.join(distDir, 'index.html');

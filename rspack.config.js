@@ -12,6 +12,11 @@ const __dirname = path.dirname(__filename);
 const isDevelopment = process.env.NODE_ENV !== "production";
 const projectDirectory = process.cwd();
 
+// Output directory, relative to the project root. Forwarded by `aplos build`
+// (which resolves --out-dir / $APLOS_OUT_DIR / the `dist` default) through the
+// APLOS_OUT_DIR env var, since this config runs in a separate rspack process.
+const outDir = process.env.APLOS_OUT_DIR || "dist";
+
 // Rspack's persistent cache defaults to node_modules/.cache/rspack and does NOT
 // honour XDG_CACHE_HOME. On PaaS builders that persist a cache volume via
 // XDG_CACHE_HOME (e.g. Kemeter mounts it at /opt/build-cache), the default
@@ -156,9 +161,9 @@ if (!isDevelopment && fs.existsSync(userPublicDir)) {
       patterns: [
         {
           from: userPublicDir,
-          to: path.resolve(projectDirectory, "./public/dist"),
+          to: path.resolve(projectDirectory, outDir),
           globOptions: {
-            ignore: ["**/dist/**", "**/index.html"],
+            ignore: ["**/index.html"],
           },
         },
       ],
@@ -225,7 +230,7 @@ const frameworkConfig = {
     sideEffects: false,
   },
   output: {
-    path: path.resolve(process.cwd(), "./public/dist"),
+    path: path.resolve(projectDirectory, outDir),
     publicPath: "/",
     filename: isDevelopment ? "[name].js" : "[name].[contenthash:8].js",
     chunkFilename: isDevelopment ? "[name].js" : "[name].[contenthash:8].js",
