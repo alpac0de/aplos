@@ -72,7 +72,8 @@
     "globals": "^16.5.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router-dom": "^7.16.0"
+    "react-router-dom": "^7.16.0",
+    "typescript-eslint": "^8.62.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",

@@ -12,10 +12,10 @@
 // for that.
 
 const { isReactCompilerRequiredSync } = require("@swc/react-compiler");
-const crypto = require("crypto");
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
+const crypto = require("node:crypto");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
 
 let babelCore = null;
 function getBabel() {
@@ -79,7 +79,7 @@ module.exports = function reactCompilerLoader(source) {
   let required = false;
   try {
     required = isReactCompilerRequiredSync(Buffer.from(source));
-  } catch (error) {
+  } catch {
     // If detection fails, fall back to running the compiler so we never
     // silently drop a needed transform.
     required = true;

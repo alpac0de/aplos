@@ -5,13 +5,11 @@ import { RspackDevServer } from "@rspack/dev-server";
 import {buildRouter} from "../build/router.js";
 import get_config from "../build/config.js";
 import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
 import net from 'net';
 import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const require = createRequire(import.meta.url);
 
 const getNetworkUrl = (port) => {
     const interfaces = os.networkInterfaces();
