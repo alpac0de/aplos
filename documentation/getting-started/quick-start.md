@@ -37,7 +37,7 @@ The page is now served at [/about](http://localhost:3000/about).
 bun run build
 ```
 
-Output lands in `public/dist/` — plain HTML, JS and CSS ready to deploy to any static host.
+Output lands in `dist/` — plain HTML, JS and CSS ready to deploy to any static host.
 
 ## Next steps
 

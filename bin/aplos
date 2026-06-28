@@ -37,6 +37,10 @@ program
     "Pre-render each static route to HTML (SSG). Dynamic routes fall back to SPA.",
     false
   )
+  .option(
+    "--out-dir <dir>",
+    "Directory the build is emitted to, relative to the project root (default: dist, or $APLOS_OUT_DIR)."
+  )
   .action(build);
 
 program

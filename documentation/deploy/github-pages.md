@@ -67,7 +67,7 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: public/dist
+          path: dist
 
   deploy:
     needs: build
@@ -102,7 +102,7 @@ Add a `CNAME` file to `public/`:
 docs.example.com
 ```
 
-It will be copied to `public/dist/` at build time. Then point your domain's CNAME record at `<username>.github.io`.
+It will be copied to `dist/` at build time. Then point your domain's CNAME record at `<username>.github.io`.
 
 ## SPA fallback
 
@@ -110,7 +110,7 @@ GitHub Pages does not support arbitrary URL rewrites, so client-side routes that
 
 ```yaml
 - name: SPA fallback
-  run: cp public/dist/index.html public/dist/404.html
+  run: cp dist/index.html dist/404.html
 ```
 
 Add this step before `upload-pages-artifact` in the workflow above. With static rendering enabled, you usually don't need this — but it's a safe fallback for any client-only route.

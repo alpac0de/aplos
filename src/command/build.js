@@ -10,8 +10,8 @@ const __dirname = path.dirname(__filename);
 
 import fs from 'fs';
 
-const showBundleAnalysis = (projectDirectory) => {
-    const distPath = path.join(projectDirectory, 'public', 'dist');
+const showBundleAnalysis = (projectDirectory, outDir = 'dist') => {
+    const distPath = path.join(projectDirectory, outDir);
     
     if (!fs.existsSync(distPath)) {
         console.log('❌ Dist folder not found');
@@ -65,6 +65,11 @@ export default async (options) => {
     let runtime_dir = __dirname + "/..";
     let node_modules = projectDirectory + "/node_modules";
 
+    // Output directory precedence: explicit --out-dir wins, then $APLOS_OUT_DIR,
+    // then the `dist` default. The resolved value is forwarded to the rspack
+    // sub-process (which reads APLOS_OUT_DIR) and to SSG / bundle analysis.
+    const outDir = options.outDir || process.env.APLOS_OUT_DIR || "dist";
+
     const buildStart = performance.now();
     await buildRouter(await get_config(projectDirectory));
 
@@ -72,7 +77,9 @@ export default async (options) => {
         "--mode=" + options.mode,
         "--config", runtime_dir + "/../rspack.config.js",
         "--entry", runtime_dir + "/runtime/app.jsx"
-    ]);
+    ], {
+        env: { ...process.env, APLOS_OUT_DIR: outDir },
+    });
 
     rspack.stdout.on('data', (data) => {
         console.log(data.toString());
@@ -92,11 +99,11 @@ export default async (options) => {
         console.log(`\n  Built in ${totalTime}ms`);
 
         if (options.mode === 'production' || process.env.NODE_ENV === 'production') {
-            showBundleAnalysis(projectDirectory);
+            showBundleAnalysis(projectDirectory, outDir);
         }
 
         try {
-            await ssg({ mode: options.mode, forceAll: options.static });
+            await ssg({ mode: options.mode, forceAll: options.static, outDir });
         } catch (err) {
             console.error(`SSG failed: ${err.message}`);
             process.exitCode = 1;

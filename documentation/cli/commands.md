@@ -52,7 +52,7 @@ Generate a production build.
 aplos build
 ```
 
-Output goes to `public/dist/`.
+Output goes to `dist/` by default.
 
 **Options:**
 
@@ -60,6 +60,10 @@ Output goes to `public/dist/`.
 |---|---|
 | `--mode <mode>` | Sets the build mode. Defaults to `development`; pass `production` for optimized output. |
 | `--static` | Pre-render opt-in pages to static HTML (SSG). See [Static rendering](/documentation/static-rendering). |
+| `--out-dir <dir>` | Directory the build is emitted to, relative to the project root. Defaults to `dist`. |
+
+The output directory is resolved in this order: the `--out-dir` flag, then the
+`APLOS_OUT_DIR` environment variable, then the `dist` default.
 
 **Examples:**
 
@@ -69,6 +73,12 @@ aplos build --mode production
 
 # Production build with static pre-rendering for opt-in pages
 aplos build --mode production --static
+
+# Emit the build to a custom directory
+aplos build --out-dir build
+
+# Same, via environment variable
+APLOS_OUT_DIR=build aplos build
 ```
 
 ## `aplos router:debug`

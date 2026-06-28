@@ -1,6 +1,5 @@
 node_modules
 .aplos
-public/dist
 dist
 .env.local
 *.log
