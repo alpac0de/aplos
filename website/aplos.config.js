@@ -1,5 +1,8 @@
-const fs = require('node:fs');
-const path = require('node:path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function walkMdFiles(dir, prefix = '') {
   const out = [];
@@ -15,7 +18,7 @@ function walkMdFiles(dir, prefix = '') {
   return out;
 }
 
-module.exports = {
+export default {
   reactStrictMode: true,
   server: {
     port: 3001,
