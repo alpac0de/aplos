@@ -191,7 +191,7 @@ const frameworkConfig = {
   mode: isDevelopment ? "development" : "production",
   devtool: isDevelopment ? "eval-source-map" : "hidden-source-map",
   cache: {
-    type: "filesystem",
+    type: "persistent",
     storage: {
       type: "filesystem",
       directory: rspackCacheDir("rspack-client"),

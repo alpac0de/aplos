@@ -43,9 +43,9 @@
   },
   "dependencies": {
     "@babel/core": "^7.29.7",
-    "@rspack/cli": "^2.0.8",
-    "@rspack/core": "^2.0.8",
-    "@rspack/dev-server": "^2.0.3",
+    "@rspack/cli": "~2.1.1",
+    "@rspack/core": "~2.1.1",
+    "@rspack/dev-server": "~2.1.0",
     "@rspack/plugin-html": "^0.5.8",
     "@rspack/plugin-react-refresh": "^2.0.2",
     "@swc/react-compiler": "^1.15.41",

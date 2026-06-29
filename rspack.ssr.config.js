@@ -51,7 +51,7 @@ const frameworkConfig = {
   stats: "errors-warnings",
   infrastructureLogging: { level: "error" },
   cache: {
-    type: "filesystem",
+    type: "persistent",
     storage: {
       type: "filesystem",
       directory: rspackCacheDir("rspack-ssr"),
