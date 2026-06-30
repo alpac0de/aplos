@@ -196,9 +196,7 @@ const frameworkConfig = {
       type: "filesystem",
       directory: rspackCacheDir("rspack-client"),
     },
-    buildDependencies: {
-      config: [path.resolve(__dirname, "rspack.config.js")],
-    },
+    buildDependencies: [path.resolve(__dirname, "rspack.config.js")],
   },
   stats: isDevelopment ? 'none' : 'normal',
   infrastructureLogging: {

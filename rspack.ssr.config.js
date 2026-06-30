@@ -56,9 +56,7 @@ const frameworkConfig = {
       type: "filesystem",
       directory: rspackCacheDir("rspack-ssr"),
     },
-    buildDependencies: {
-      config: [path.resolve(__dirname, "rspack.ssr.config.js")],
-    },
+    buildDependencies: [path.resolve(__dirname, "rspack.ssr.config.js")],
   },
   output: {
     path: path.resolve(projectDirectory, "./.aplos/cache"),
