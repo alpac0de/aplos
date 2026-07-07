@@ -93,7 +93,10 @@ export default async () => {
 
     fs.writeFileSync(
         cacheDirectory + "/config.js",
-        "module.exports = " + JSON.stringify(config),
+        // The cache is consumed via `import Config from "@config"` (ESM), so it
+        // must expose a default export — not CommonJS `module.exports`, which
+        // has no `default` binding under ESM linking.
+        "export default " + JSON.stringify(config),
     );
     let projectDirectory = process.cwd();
 
