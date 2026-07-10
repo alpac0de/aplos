@@ -1,5 +1,5 @@
 import path from "path";
-import { HtmlRspackPlugin, CssExtractRspackPlugin, CopyRspackPlugin } from "@rspack/core";
+import { HtmlRspackPlugin, CssExtractRspackPlugin, CopyRspackPlugin, sources } from "@rspack/core";
 import { ReactRefreshRspackPlugin as ReactRefreshPlugin } from "@rspack/plugin-react-refresh";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -57,7 +57,45 @@ if (fs.existsSync(configPath)) {
   }
 }
 
-// Custom plugin to inject head tags
+// Escape a value interpolated into a double-quoted HTML attribute. Without this,
+// a `"` in a config value (say a `description` containing a quotation) closes the
+// attribute early and the rest of the value is parsed as markup.
+// `&` goes first, otherwise it would re-escape the entities introduced below.
+function escapeAttribute(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// Escape text content. `<title>` holds character data, so quotes are fine but
+// angle brackets and ampersands are not.
+function escapeText(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// Serialize a tag's attributes. A `true` boolean renders as a bare attribute
+// (`async`), `false` and `null`/`undefined` drop the attribute entirely.
+function renderAttributes(attrs) {
+  return Object.entries(attrs)
+    .map(([key, value]) => {
+      if (value === true) return key;
+      if (value === false || value == null) return "";
+      return `${key}="${escapeAttribute(value)}"`;
+    })
+    .filter(Boolean)
+    .join(" ");
+}
+
+// Custom plugin to inject head tags.
+//
+// HtmlRspackPlugin's own `meta` option is a Record and it cannot inject
+// arbitrary <link>/<script> tags, so it cannot express aplos's `head` config
+// (arrays of attribute objects). Hence this plugin.
 class InjectHeadTagsPlugin {
   constructor(config) {
     this.headConfig = config;
@@ -70,7 +108,12 @@ class InjectHeadTagsPlugin {
       hooks.processAssets.tapAsync(
         {
           name: 'InjectHeadTagsPlugin',
-          stage: compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+          // PROCESS_ASSETS_STAGE_* are static properties of Compilation, not
+          // instance ones: reading them off `compilation` yields undefined,
+          // which rspack treats as stage 0. That ran the hook long before
+          // HtmlRspackPlugin emits index.html at stage 700, so no .html asset
+          // was ever found and the entire `head` config was silently dropped.
+          stage: compilation.constructor.PROCESS_ASSETS_STAGE_SUMMARIZE,
         },
         (assets, callback) => {
           const htmlFiles = Object.keys(assets).filter(file => file.endsWith('.html'));
@@ -79,56 +122,35 @@ class InjectHeadTagsPlugin {
             const asset = assets[filename];
             let html = asset.source().toString();
 
-            let headTags = '';
+            const tags = [];
 
-            // Add meta tags
-            if (this.headConfig.meta) {
-              this.headConfig.meta.forEach(meta => {
-                const attrs = Object.entries(meta)
-                  .map(([key, value]) => `${key}="${value}"`)
-                  .join(' ');
-                headTags += `\n    <meta ${attrs}>`;
-              });
-            }
-
-            // Add link tags
-            if (this.headConfig.link) {
-              this.headConfig.link.forEach(link => {
-                const attrs = Object.entries(link)
-                  .map(([key, value]) => `${key}="${value}"`)
-                  .join(' ');
-                headTags += `\n    <link ${attrs}>`;
-              });
-            }
-
-            // Add script tags
-            if (this.headConfig.script) {
-              this.headConfig.script.forEach(script => {
-                const attrs = Object.entries(script)
-                  .map(([key, value]) => {
-                    if (typeof value === 'boolean' && value) {
-                      return key;
-                    }
-                    return typeof value !== 'boolean' ? `${key}="${value}"` : '';
-                  })
-                  .filter(Boolean)
-                  .join(' ');
-                headTags += `\n    <script ${attrs}></script>`;
-              });
-            }
-
-            // Add title if configured
+            // Title first, so it stays at the top of <head>.
             if (this.headConfig.defaultTitle) {
-              headTags = `\n    <title>${this.headConfig.defaultTitle}</title>` + headTags;
+              tags.push(`<title>${escapeText(this.headConfig.defaultTitle)}</title>`);
             }
 
-            // Inject into HTML
+            for (const meta of this.headConfig.meta || []) {
+              tags.push(`<meta ${renderAttributes(meta)}>`);
+            }
+
+            for (const link of this.headConfig.link || []) {
+              tags.push(`<link ${renderAttributes(link)}>`);
+            }
+
+            for (const script of this.headConfig.script || []) {
+              tags.push(`<script ${renderAttributes(script)}></script>`);
+            }
+
+            if (tags.length === 0) return;
+
+            const headTags = tags.map(tag => `\n    ${tag}`).join('');
             html = html.replace('</head>', `${headTags}\n  </head>`);
 
-            assets[filename] = {
-              source: () => html,
-              size: () => html.length
-            };
+            // Hand rspack a real Source over UTF-8 bytes. A plain object literal
+            // bypasses the asset pipeline, and `html.length` counts UTF-16 code
+            // units, so a title with an accent or an emoji under-reports the
+            // asset size.
+            compilation.updateAsset(filename, new sources.RawSource(Buffer.from(html, 'utf8')));
           });
 
           callback();
