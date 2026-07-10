@@ -225,7 +225,6 @@ const frameworkConfig = {
         }
       : false,
     usedExports: !isDevelopment,
-    sideEffects: false,
   },
   output: {
     path: path.resolve(projectDirectory, outDir),
