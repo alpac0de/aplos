@@ -144,7 +144,19 @@ class InjectHeadTagsPlugin {
             if (tags.length === 0) return;
 
             const headTags = tags.map(tag => `\n    ${tag}`).join('');
-            html = html.replace('</head>', `${headTags}\n  </head>`);
+
+            // Anchor on the LAST `</head>`, not the first. A template may carry
+            // an inline script holding that literal in a string, and injecting
+            // at the first match lands the tags inside the script: the head
+            // config is lost and the script body is corrupted. HtmlRspackPlugin
+            // normalizes the document, so the closing tag is always present and
+            // any literal occurrence necessarily precedes it.
+            const closeIndex = html.lastIndexOf('</head>');
+            if (closeIndex === -1) return;
+            html =
+              html.slice(0, closeIndex) +
+              `${headTags}\n  ` +
+              html.slice(closeIndex);
 
             // Hand rspack a real Source over UTF-8 bytes. A plain object literal
             // bypasses the asset pipeline, and `html.length` counts UTF-16 code
