@@ -187,6 +187,10 @@ if (!isDevelopment && fs.existsSync(userPublicDir)) {
           globOptions: {
             ignore: ["**/index.html"],
           },
+          // `public/` existing is not enough: the glob still has to match
+          // something. A directory that is empty, or whose only entry is the
+          // `index.html` ignored just above, makes the copy fail the build.
+          noErrorOnMissing: true,
         },
       ],
     })
