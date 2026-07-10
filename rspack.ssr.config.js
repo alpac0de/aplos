@@ -75,6 +75,10 @@ const frameworkConfig = {
     minimize: false,
     splitChunks: false,
     usedExports: false,
+    // Kept off here (unlike the client config, where it is left at rspack's
+    // production default): this bundle is executed once by ssg.js to emit HTML,
+    // never shipped. Size is irrelevant, and eliding a side-effectful module —
+    // a CSS import, a polyfill — would silently change the rendered output.
     sideEffects: false,
   },
   module: {
