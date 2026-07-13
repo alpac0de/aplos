@@ -113,7 +113,15 @@ class InjectHeadTagsPlugin {
           // which rspack treats as stage 0. That ran the hook long before
           // HtmlRspackPlugin emits index.html at stage 700, so no .html asset
           // was ever found and the entire `head` config was silently dropped.
-          stage: compilation.constructor.PROCESS_ASSETS_STAGE_SUMMARIZE,
+          //
+          // REPORT (5000), not SUMMARIZE (1000): the content hashes are only
+          // substituted into the HTML at OPTIMIZE_HASH (2500). Replacing the asset
+          // with a RawSource before that froze the markup while its script tags still
+          // carried stale chunk names, so every hash in the emitted index.html —
+          // scripts and stylesheet alike — pointed at files the build never wrote.
+          // Production bundles could not load at all; dev was unaffected because its
+          // filenames carry no hash.
+          stage: compilation.constructor.PROCESS_ASSETS_STAGE_REPORT,
         },
         (assets, callback) => {
           const htmlFiles = Object.keys(assets).filter(file => file.endsWith('.html'));
