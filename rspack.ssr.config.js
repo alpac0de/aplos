@@ -50,7 +50,9 @@ const frameworkConfig = {
   devtool: false,
   stats: "errors-warnings",
   infrastructureLogging: { level: "error" },
-  cache: {
+  // Same trade as the client compilation: on by default for warm builds, off via
+  // APLOS_BUILD_CACHE=0 when the builder cannot afford the serialisation overhead.
+  cache: process.env.APLOS_BUILD_CACHE !== "0" && {
     type: "persistent",
     storage: {
       type: "filesystem",
