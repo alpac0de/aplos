@@ -128,6 +128,7 @@ describe('build mode comes from --mode, not the environment', () => {
         const files = await fixture.readdir();
         expect(files.some((f) => f.endsWith('.map'))).toBe(false);
     }, 120_000);
+
 });
 
 describe('build failure handling', () => {

@@ -1,8 +1,8 @@
-import {spawn} from "child_process";
+import { rspack } from "@rspack/core";
 import {buildRouter}  from "../build/router.js";
 import get_config from '../build/config.js';
 import ssg from '../build/ssg.js';
-import { rspackCommand } from '../build/rspack-bin.js';
+import { createRspackConfig } from '../build/rspack-config.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -66,59 +66,94 @@ export default async (options) => {
     let runtime_dir = __dirname + "/..";
 
     // Output directory precedence: explicit --out-dir wins, then $APLOS_OUT_DIR,
-    // then the `dist` default. The resolved value is forwarded to the rspack
-    // sub-process (which reads APLOS_OUT_DIR) and to SSG / bundle analysis.
+    // then the `dist` default.
     const outDir = options.outDir || process.env.APLOS_OUT_DIR || "dist";
 
     const buildStart = performance.now();
     await buildRouter(await get_config(projectDirectory));
 
-    const [command, commandArgs] = rspackCommand([
-        "--mode=" + options.mode,
-        "--config", runtime_dir + "/../rspack.config.js",
-        "--entry", runtime_dir + "/runtime/app.jsx"
-    ]);
-
-    const rspack = spawn(command, commandArgs, {
-        env: { ...process.env, APLOS_OUT_DIR: outDir, APLOS_MODE: options.mode },
+    // The build runs rspack in-process, not through the CLI in a subprocess. That
+    // gives us the exit-code decision, the stats, and compiler.close() (which
+    // flushes the persistent cache) directly, instead of parsing stdout and reading
+    // a close code across a process boundary. It also removes the APLOS_MODE /
+    // APLOS_OUT_DIR env vars, which only existed to cross that boundary: the config
+    // now takes them as arguments.
+    const config = await createRspackConfig({
+        mode: options.mode,
+        outDir,
+        entry: [runtime_dir + "/runtime/app.jsx"],
+        projectDirectory,
     });
 
-    rspack.stdout.on('data', (data) => {
-        console.log(data.toString());
-    });
+    const stats = await runRspack(config);
 
-    rspack.stderr.on('data', (data) => {
-        console.log(`stderr: ${data.toString()}`);
-    });
+    // A failed bundle must fail the build: otherwise `bun run build` reports success
+    // and a deploy happily serves an empty output directory.
+    if (!stats || stats.hasErrors()) {
+        const { errors } = stats
+            ? stats.toJson({ errors: true, all: false })
+            : { errors: [{ message: "rspack did not produce any stats" }] };
 
-    // A failed bundle must fail the build: without an exit code, `bun run build`
-    // reports success and a deploy happily serves an empty output directory. A
-    // process killed by a signal (`SIGKILL` from the OOM killer, typically) reports
-    // a null code and names the signal instead, so neither can be read alone.
-    rspack.on('close', async (code, signal) => {
-        if (code !== 0 || signal !== null) {
-            console.log(
-                signal !== null
-                    ? `error: Process killed by ${signal} (out of memory?)`
-                    : `error: Process exited with code ${code}`,
-            );
-            process.exitCode = 1;
-
-            return;
+        console.error("\n  Build failed.\n");
+        for (const error of errors.slice(0, 5)) {
+            console.error(error.message || error);
         }
-
-        const totalTime = Math.round(performance.now() - buildStart);
-        console.log(`\n  Built in ${totalTime}ms`);
-
-        if (options.mode === 'production' || process.env.NODE_ENV === 'production') {
-            showBundleAnalysis(projectDirectory, outDir);
+        if (errors.length > 5) {
+            console.error(`  ...and ${errors.length - 5} more error(s).`);
         }
+        process.exitCode = 1;
+        return;
+    }
 
-        try {
-            await ssg({ mode: options.mode, forceAll: options.static, outDir });
-        } catch (err) {
-            console.error(`SSG failed: ${err.message}`);
-            process.exitCode = 1;
+    // Warnings are printed but do not fail the build.
+    if (stats.hasWarnings()) {
+        const { warnings } = stats.toJson({ warnings: true, all: false });
+        for (const warning of warnings.slice(0, 5)) {
+            console.warn(warning.message || warning);
         }
-    });
+    }
+
+    const totalTime = Math.round(performance.now() - buildStart);
+    console.log(`\n  Built in ${totalTime}ms`);
+
+    if (options.mode === 'production' || process.env.NODE_ENV === 'production') {
+        showBundleAnalysis(projectDirectory, outDir);
+    }
+
+    try {
+        await ssg({ mode: options.mode, forceAll: options.static, outDir });
+    } catch (err) {
+        console.error(`SSG failed: ${err.message}`);
+        process.exitCode = 1;
+    }
 };
+
+// Runs one rspack compilation to completion and closes the compiler.
+//
+// close() is not optional: it is what flushes the persistent cache to disk, so
+// skipping it turns "persistent cache" into "cache that never persists". It runs
+// on both the success and failure paths.
+function runRspack(config) {
+    return new Promise((resolve) => {
+        const compiler = rspack(config);
+
+        compiler.run((runError, stats) => {
+            compiler.close((closeError) => {
+                if (runError) {
+                    console.error(runError.message || runError);
+                    resolve(null);
+                    return;
+                }
+                // A close() failure is a build failure: close() is what flushes the
+                // persistent cache, so a silent failure here means the cache never
+                // persisted while the build still reported success.
+                if (closeError) {
+                    console.error(closeError.message || closeError);
+                    resolve(null);
+                    return;
+                }
+                resolve(stats);
+            });
+        });
+    });
+}
