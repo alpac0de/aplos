@@ -4,6 +4,7 @@ import { rspack } from "@rspack/core";
 import { RspackDevServer } from "@rspack/dev-server";
 import {buildRouter} from "../build/router.js";
 import get_config from "../build/config.js";
+import { createRspackConfig } from "../build/rspack-config.js";
 import { fileURLToPath } from 'url';
 import net from 'net';
 import os from 'os';
@@ -109,9 +110,10 @@ export default async () => {
 
     let runtime_dir = __dirname + "/..";
 
-    const { default: rspackConfig } = await import(runtime_dir + "/../rspack.config.js");
-    rspackConfig.mode = "development";
-    rspackConfig.entry = [runtime_dir + "/runtime/app.jsx"];
+    const rspackConfig = await createRspackConfig({
+        mode: "development",
+        entry: [runtime_dir + "/runtime/app.jsx"],
+    });
 
     const compiler = rspack(rspackConfig);
 
