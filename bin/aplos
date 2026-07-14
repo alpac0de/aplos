@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { config } from "dotenv";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const projectDir = process.cwd();
 config({ path: resolve(projectDir, ".env"), quiet: true });
@@ -16,8 +17,15 @@ import build from "../src/command/build.js";
 import router from "../src/command/router.js";
 import create from "../src/command/create.js";
 
+// Read from the manifest rather than restating it: the hardcoded string had drifted
+// to 0.14.0 while the package was 0.15.0, so `aplos --version` reported a version
+// that was never published.
+const manifest = JSON.parse(
+  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../package.json"), "utf8")
+);
+
 const program = new Command();
-program.name("Aplos").description("React Framework").version("0.14.0");
+program.name("Aplos").description("React Framework").version(manifest.version);
 
 program
   .command("server")

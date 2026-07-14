@@ -11,7 +11,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "aplos/config": ["./node_modules/aplosjs/src/config"],
+      "aplos/navigation": ["./node_modules/aplosjs/src/components/navigation"],
+      "aplos/head": ["./node_modules/aplosjs/src/components/head"],
+      "aplos/redirect": ["./node_modules/aplosjs/src/runtime/redirect"]
     }
   },
   "include": ["src"]

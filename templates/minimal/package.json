@@ -9,7 +9,7 @@
     "build:static": "aplos build --static"
   },
   "dependencies": {
-    "aplosjs": "^0.14.0",
+    "aplosjs": "{{VERSION}}",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.5"
