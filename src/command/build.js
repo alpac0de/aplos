@@ -78,7 +78,7 @@ export default async (options) => {
         "--config", runtime_dir + "/../rspack.config.js",
         "--entry", runtime_dir + "/runtime/app.jsx"
     ], {
-        env: { ...process.env, APLOS_OUT_DIR: outDir },
+        env: { ...process.env, APLOS_OUT_DIR: outDir, APLOS_MODE: options.mode },
     });
 
     rspack.stdout.on('data', (data) => {

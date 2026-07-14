@@ -2,6 +2,7 @@ node_modules
 dist
 .aplos
 
-src/pages
-
-aplos.config.js
+# Anchored to the repo root: these ignore the scratch app used to try the
+# framework out, not the committed fixtures the build tests run against.
+/src/pages
+/aplos.config.js
