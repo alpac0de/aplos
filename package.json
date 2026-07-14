@@ -32,7 +32,7 @@
     "create-aplos/",
     "rspack.config.js",
     "rspack.ssr.config.js",
-    "postcss.config.js",
+    "postcss.config.cjs",
     "aplos.config.dist.js",
     "README.md"
   ],
@@ -96,6 +96,9 @@
     "./redirect": {
       "types": "./src/runtime/redirect.d.ts",
       "default": "./src/runtime/redirect.js"
+    },
+    "./create": {
+      "default": "./src/command/create.js"
     }
   }
 }
