@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import { pathToFileURL } from "url";
 import { merge } from "webpack-merge";
+import { toHeadElements, renderHead } from "./src/build/head.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -63,39 +64,6 @@ if (fs.existsSync(configPath)) {
   }
 }
 
-// Escape a value interpolated into a double-quoted HTML attribute. Without this,
-// a `"` in a config value (say a `description` containing a quotation) closes the
-// attribute early and the rest of the value is parsed as markup.
-// `&` goes first, otherwise it would re-escape the entities introduced below.
-function escapeAttribute(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-// Escape text content. `<title>` holds character data, so quotes are fine but
-// angle brackets and ampersands are not.
-function escapeText(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-// Serialize a tag's attributes. A `true` boolean renders as a bare attribute
-// (`async`), `false` and `null`/`undefined` drop the attribute entirely.
-function renderAttributes(attrs) {
-  return Object.entries(attrs)
-    .map(([key, value]) => {
-      if (value === true) return key;
-      if (value === false || value == null) return "";
-      return `${key}="${escapeAttribute(value)}"`;
-    })
-    .filter(Boolean)
-    .join(" ");
-}
 
 // Custom plugin to inject head tags.
 //
@@ -136,28 +104,12 @@ class InjectHeadTagsPlugin {
             const asset = assets[filename];
             let html = asset.source().toString();
 
-            const tags = [];
+            // Shared with the SSG, so both paths escape identically and neither
+            // can grow its own idea of what a head tag is.
+            const elements = toHeadElements(this.headConfig);
+            if (elements.length === 0) return;
 
-            // Title first, so it stays at the top of <head>.
-            if (this.headConfig.defaultTitle) {
-              tags.push(`<title>${escapeText(this.headConfig.defaultTitle)}</title>`);
-            }
-
-            for (const meta of this.headConfig.meta || []) {
-              tags.push(`<meta ${renderAttributes(meta)}>`);
-            }
-
-            for (const link of this.headConfig.link || []) {
-              tags.push(`<link ${renderAttributes(link)}>`);
-            }
-
-            for (const script of this.headConfig.script || []) {
-              tags.push(`<script ${renderAttributes(script)}></script>`);
-            }
-
-            if (tags.length === 0) return;
-
-            const headTags = tags.map(tag => `\n    ${tag}`).join('');
+            const headTags = `\n${renderHead(elements)}`;
 
             // Anchor on the LAST `</head>`, not the first. A template may carry
             // an inline script holding that literal in a string, and injecting

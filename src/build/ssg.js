@@ -3,6 +3,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { pathToFileURL, fileURLToPath } from 'url';
 import { rspackCommand } from './rspack-bin.js';
+import { toHeadElements, renderHead } from './head.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -120,81 +121,118 @@ export default async function ssg({ mode, forceAll = false, outDir } = {}) {
     console.log(`  Pre-rendered ${rendered}/${staticRoutes.length} route(s).`);
 }
 
-function escapeHtml(value) {
-    return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
-
-function metaTag(attrs) {
-    const parts = Object.entries(attrs)
-        .filter(([, v]) => v !== undefined && v !== null && v !== false)
-        .map(([k, v]) => `${k}="${escapeHtml(v)}"`);
-    return `<meta ${parts.join(' ')}>`;
-}
-
-function buildMetaHtml(meta) {
-    const tags = [];
-    if (meta.title) {
-        tags.push(`<title>${escapeHtml(meta.title)}</title>`);
-    }
-    if (meta.description) {
-        tags.push(metaTag({ name: 'description', content: meta.description }));
-    }
-    if (meta.canonical) {
-        tags.push(`<link rel="canonical" href="${escapeHtml(meta.canonical)}">`);
-    }
-    if (Array.isArray(meta.keywords) && meta.keywords.length > 0) {
-        tags.push(metaTag({ name: 'keywords', content: meta.keywords.join(', ') }));
-    }
-    if (meta.og && typeof meta.og === 'object') {
-        for (const [key, value] of Object.entries(meta.og)) {
-            tags.push(metaTag({ property: `og:${key}`, content: value }));
-        }
-    }
-    if (meta.twitter && typeof meta.twitter === 'object') {
-        for (const [key, value] of Object.entries(meta.twitter)) {
-            tags.push(metaTag({ name: `twitter:${key}`, content: value }));
-        }
-    }
-    if (Array.isArray(meta.meta)) {
-        for (const entry of meta.meta) {
-            if (entry && typeof entry === 'object') {
-                tags.push(metaTag(entry));
-            }
-        }
-    }
-    if (Array.isArray(meta.link)) {
-        for (const entry of meta.link) {
-            if (entry && typeof entry === 'object') {
-                const parts = Object.entries(entry)
-                    .filter(([, v]) => v !== undefined && v !== null && v !== false)
-                    .map(([k, v]) => `${k}="${escapeHtml(v)}"`);
-                tags.push(`<link ${parts.join(' ')}>`);
-            }
-        }
-    }
-    return tags.join('\n    ');
-}
-
+/**
+ * Layers a route's meta over the head already present in the document.
+ *
+ * The template arrives with the global head config already injected by the build,
+ * so a route's title and description must REPLACE their global counterparts, not
+ * queue up behind them: appending sent two <title> and two meta descriptions to
+ * crawlers. Tags are parsed back into descriptors, merged by identity, and the
+ * head is rewritten once through the shared serializer.
+ *
+ * Anchoring is on the LAST `</head>`, matching the build plugin. The old code
+ * replaced the FIRST one, which lands the tags inside an inline script that
+ * merely contains the literal, and drops them from the head entirely.
+ */
 export function injectMetaTags(html, meta) {
-    const block = buildMetaHtml(meta);
-    if (!block) {
+    const routeElements = toHeadElements(meta || {});
+    if (routeElements.length === 0) {
         return html;
     }
-    const titleMatch = block.match(/<title>[\s\S]*?<\/title>/);
-    if (titleMatch) {
-        if (/<title>[\s\S]*?<\/title>/.test(html)) {
-            html = html.replace(/<title>[\s\S]*?<\/title>/, titleMatch[0]);
-        } else {
-            html = html.replace('</head>', `    ${titleMatch[0]}\n  </head>`);
-        }
+
+    // Anchor on the LAST `</head>`, as the build plugin does. Replacing the first
+    // one lands the tags inside an inline script that merely contains the literal.
+    const closeIndex = html.lastIndexOf('</head>');
+    if (closeIndex === -1) {
+        return html;
     }
-    const remaining = block.replace(/<title>[\s\S]*?<\/title>\s*/, '');
-    if (remaining) {
-        html = html.replace('</head>', `    ${remaining}\n  </head>`);
+
+    // Only the tags this route actually overrides are removed. The rest of the
+    // head is left byte for byte: re-serializing it would mean parsing inline
+    // scripts and stylesheets back out of markup, which is how this file grew a
+    // bug in the first place.
+    let head = html.slice(0, closeIndex);
+    const tail = html.slice(closeIndex);
+
+    for (const element of routeElements) {
+        head = removeTag(head, element);
     }
-    return html;
+
+    return `${head}${renderHead(routeElements)}\n  ${tail}`;
+}
+
+/**
+ * Strips the tag a route element is about to replace, so the page's title and
+ * description supersede the global ones instead of queueing up behind them.
+ * Appending sent two <title> and two meta descriptions to crawlers.
+ *
+ * Only self-identifying tags are matched: a title, a named or property meta, a
+ * canonical link. Anything else accumulates, which is the correct behaviour for
+ * stylesheets, preloads and scripts.
+ */
+function removeTag(head, element) {
+    const { tag, attrs = {} } = element;
+
+    let pattern;
+
+    // The patterns match the tag alone. Leading whitespace is deliberately left
+    // out: masked-out regions are blanked to spaces of the same length, so a
+    // pattern that could start on whitespace would anchor inside one of them.
+    if (tag === 'title') {
+        pattern = /<title>[\s\S]*?<\/title>/i;
+    } else if (tag === 'meta') {
+        const name = attrs.name || attrs.property;
+        if (!name) return head;
+
+        const key = attrs.name ? 'name' : 'property';
+        // The attribute may be quoted either way and carry others alongside it.
+        pattern = new RegExp(
+            `<meta[^>]*\\b${key}=["']${escapeForRegExp(name)}["'][^>]*>`,
+            'i',
+        );
+    } else if (tag === 'link' && attrs.rel === 'canonical') {
+        pattern = /<link[^>]*\brel=["']canonical["'][^>]*>/i;
+    } else {
+        return head;
+    }
+
+    return replaceOutsideInertRegions(head, pattern);
+}
+
+/**
+ * Applies a replacement only to live markup.
+ *
+ * A tag pattern will happily match inside an HTML comment or a script body, where
+ * the text merely looks like markup. Stripping the "tag" there leaves the real one
+ * in place (so the page ships two descriptions) and corrupts the comment or the
+ * script. Inert regions are masked out before the match and restored after.
+ */
+function replaceOutsideInertRegions(html, pattern) {
+    const inert = [];
+    const masked = html.replace(
+        /<!--[\s\S]*?-->|<script\b[^>]*>[\s\S]*?<\/script>/gi,
+        (region) => {
+            const token = ` ${inert.length} `;
+            inert.push(region);
+            return token.padEnd(region.length, ' ').slice(0, region.length);
+        },
+    );
+
+    const match = pattern.exec(masked);
+    if (!match) return html;
+
+    // The mask preserves offsets, so the index maps straight back onto the source.
+    let start = match.index;
+    let end = start + match[0].length;
+
+    // Take the tag's own indentation and trailing newline with it, so removing a
+    // tag does not leave a blank line where it stood.
+    while (start > 0 && (html[start - 1] === ' ' || html[start - 1] === '\t')) start--;
+    if (html[end] === '\n') end++;
+
+    return html.slice(0, start) + html.slice(end);
+}
+
+function escapeForRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
