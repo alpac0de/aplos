@@ -77,6 +77,21 @@ describe('production build artifacts', () => {
         expect(html).toContain('Build fixture');
     });
 
+    // The build plugin and the SSG both write the head. They used to do so with
+    // separate serializers and opposite anchors, so a pre-rendered page ended up
+    // with the global tags AND its own, and crawlers saw two of each.
+    test('a pre-rendered page carries its own head, not a duplicated one', async () => {
+        const staticHtml = await fixture.readFile('static.html');
+
+        expect(staticHtml.match(/<title>/g)).toHaveLength(1);
+        expect(staticHtml.match(/name="description"/g)).toHaveLength(1);
+
+        // The page's own meta won over the global config.
+        expect(staticHtml).toContain('<title>Static page</title>');
+        expect(staticHtml).toContain('Pre-rendered at build time');
+        expect(staticHtml).not.toContain('content="Build fixture"');
+    });
+
     // Locks dcfc275: production shipped source maps.
     test('production emits no source maps', async () => {
         const files = await fixture.readdir();
