@@ -9,7 +9,13 @@ import { merge } from "webpack-merge";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const isDevelopment = process.env.NODE_ENV !== "production";
+// `aplos build --mode` is the source of truth, forwarded as APLOS_MODE because
+// this config is loaded in the rspack subprocess. NODE_ENV is only a fallback:
+// reading it first made `--mode=production` silently emit a development bundle
+// (no contenthash, so deploys serve stale files from HTTP caches) whenever the
+// environment set NODE_ENV to anything else, which CI runners routinely do.
+const mode = process.env.APLOS_MODE || process.env.NODE_ENV || "development";
+const isDevelopment = mode !== "production";
 const projectDirectory = process.cwd();
 
 // Output directory, relative to the project root. Forwarded by `aplos build`
