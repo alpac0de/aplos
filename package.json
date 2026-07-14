@@ -34,7 +34,8 @@
     "rspack.ssr.config.js",
     "postcss.config.cjs",
     "aplos.config.dist.js",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "dev": "bin/aplos server",
