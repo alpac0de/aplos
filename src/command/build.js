@@ -89,9 +89,19 @@ export default async (options) => {
         console.log(`stderr: ${data.toString()}`);
     });
 
-    rspack.on('close', async (code) => {
-        if (code !== 0) {
-            console.log(`error: Process exited with code ${code}`);
+    // A failed bundle must fail the build: without an exit code, `bun run build`
+    // reports success and a deploy happily serves an empty output directory. A
+    // process killed by a signal (`SIGKILL` from the OOM killer, typically) reports
+    // a null code and names the signal instead, so neither can be read alone.
+    rspack.on('close', async (code, signal) => {
+        if (code !== 0 || signal !== null) {
+            console.log(
+                signal !== null
+                    ? `error: Process killed by ${signal} (out of memory?)`
+                    : `error: Process exited with code ${code}`,
+            );
+            process.exitCode = 1;
+
             return;
         }
 
