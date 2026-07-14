@@ -2,6 +2,7 @@ import {spawn} from "child_process";
 import {buildRouter}  from "../build/router.js";
 import get_config from '../build/config.js';
 import ssg from '../build/ssg.js';
+import { rspackCommand } from '../build/rspack-bin.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -63,7 +64,6 @@ const showBundleAnalysis = (projectDirectory, outDir = 'dist') => {
 export default async (options) => {
     let projectDirectory = process.cwd();
     let runtime_dir = __dirname + "/..";
-    let node_modules = projectDirectory + "/node_modules";
 
     // Output directory precedence: explicit --out-dir wins, then $APLOS_OUT_DIR,
     // then the `dist` default. The resolved value is forwarded to the rspack
@@ -73,11 +73,13 @@ export default async (options) => {
     const buildStart = performance.now();
     await buildRouter(await get_config(projectDirectory));
 
-    const rspack = spawn(node_modules + "/.bin/rspack", [
+    const [command, commandArgs] = rspackCommand([
         "--mode=" + options.mode,
         "--config", runtime_dir + "/../rspack.config.js",
         "--entry", runtime_dir + "/runtime/app.jsx"
-    ], {
+    ]);
+
+    const rspack = spawn(command, commandArgs, {
         env: { ...process.env, APLOS_OUT_DIR: outDir, APLOS_MODE: options.mode },
     });
 

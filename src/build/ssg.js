@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
 import { pathToFileURL, fileURLToPath } from 'url';
+import { rspackCommand } from './rspack-bin.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,16 +18,17 @@ function outputHtmlPath(distDir, routePath) {
     return path.join(distDir, `${trimmed}.html`);
 }
 
-async function buildSSRBundle(projectDirectory, frameworkDirectory, mode) {
+async function buildSSRBundle(frameworkDirectory, mode) {
     const ssrConfigPath = path.resolve(frameworkDirectory, 'rspack.ssr.config.js');
-    const rspackBin = path.join(projectDirectory, 'node_modules', '.bin', 'rspack');
+
+    const [command, commandArgs] = rspackCommand([
+        '--mode=' + mode,
+        '--config', ssrConfigPath,
+        '--entry', SSR_ENTRY,
+    ]);
 
     return new Promise((resolve, reject) => {
-        const child = spawn(rspackBin, [
-            '--mode=' + mode,
-            '--config', ssrConfigPath,
-            '--entry', SSR_ENTRY,
-        ], {
+        const child = spawn(command, commandArgs, {
             env: { ...process.env, APLOS_SSR: '1' },
         });
 
@@ -70,7 +72,7 @@ export default async function ssg({ mode, forceAll = false, outDir } = {}) {
     }
 
     console.log('\n  Building SSR bundle...');
-    await buildSSRBundle(projectDirectory, frameworkDirectory, mode || 'production');
+    await buildSSRBundle(frameworkDirectory, mode || 'production');
 
     const ssrBundlePath = path.join(cacheDir, SSR_BUNDLE_NAME);
     if (!fs.existsSync(ssrBundlePath)) {

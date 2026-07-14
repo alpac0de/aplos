@@ -32,16 +32,11 @@ async function installDependencies(root) {
         });
     });
 
-    // `aplos build` spawns node_modules/.bin/rspack from the project directory,
-    // and rspack is the framework's dependency, not the fixture's.
-    const binDir = path.join(root, 'node_modules', '.bin');
-    await fs.mkdir(binDir, { recursive: true });
-    await fs.symlink(
-        path.join(frameworkDir, 'node_modules', '.bin', 'rspack'),
-        path.join(binDir, 'rspack'),
-    ).catch((error) => {
-        if (error.code !== 'EEXIST') throw error;
-    });
+    // Deliberately no node_modules/.bin/rspack here. npm does not create it for a
+    // project consuming aplosjs, since @rspack/cli is the framework's dependency
+    // rather than the project's. The build must resolve rspack through its own
+    // module graph, so leaving the bin out is what keeps that honest: restore the
+    // old `spawn(<project>/node_modules/.bin/rspack)` and these tests fail.
 }
 
 /**
