@@ -225,10 +225,25 @@ if (fs.existsSync(userConfigPath) && userConfigPath !== __filename) {
   }
 }
 
+// The persistent cache is what a warm build is made of, so it stays on by default. It
+// is not free, though: serialising the module graph to disk keeps the live graph and
+// its serialisation buffer resident at once, which measured ~83 MB of peak RSS on an
+// app whose bundle is under a megabyte. On a memory-capped builder that overhead is
+// enough to get the bundler OOM-killed, and a build that dies buys no warm builds at
+// all — hence the escape hatch. Set APLOS_BUILD_CACHE=0 to trade warm builds for the
+// lower peak.
+const buildCacheEnabled = process.env.APLOS_BUILD_CACHE !== "0";
+
+// Production source maps emit megabytes of .map files that nothing fetches, so they are
+// off by default. Set APLOS_SOURCE_MAPS=1 to restore them, e.g. to feed an error monitor.
+const productionSourceMaps = process.env.APLOS_SOURCE_MAPS === "1";
+
 const frameworkConfig = {
   mode: isDevelopment ? "development" : "production",
-  devtool: isDevelopment ? "eval-source-map" : "hidden-source-map",
-  cache: {
+  devtool: isDevelopment
+    ? "eval-source-map"
+    : productionSourceMaps && "hidden-source-map",
+  cache: buildCacheEnabled && {
     type: "persistent",
     storage: {
       type: "filesystem",

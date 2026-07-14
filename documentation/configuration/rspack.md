@@ -87,5 +87,16 @@ bun run build
 
 The cache invalidates automatically when `rspack.config.js` or `rspack.ssr.config.js` changes. To force a clean build, delete the cache directory.
 
+### Memory cost
+
+The persistent cache trades memory for speed: restoring and serialising the module graph keeps it resident alongside the live one, which measured ~83 MB of extra peak RSS on an app whose bundle is under a megabyte. This is a known Rspack issue ([#11185](https://github.com/web-infra-dev/rspack/issues/11185)) and the overhead grows once a cache exists, so it hits hardest exactly where the cache is persisted across deploys.
+
+On a memory-capped builder that overhead can be enough to get the bundler OOM-killed — and a build that dies buys no warm builds at all. Set `APLOS_BUILD_CACHE=0` to trade warm builds for the lower peak:
+
+```bash
+# Build on a memory-constrained container
+APLOS_BUILD_CACHE=0 bun run build
+```
+
 !!! warning
     Avoid overriding core framework settings (entry, output.path, internal aliases) as this may break Aplos functionality.
