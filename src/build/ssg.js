@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
+import { rspack } from '@rspack/core';
 import { pathToFileURL, fileURLToPath } from 'url';
-import { rspackCommand } from './rspack-bin.js';
+import { createSSRConfig } from './ssr-config.js';
 import { toHeadElements, renderHead } from './head.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,39 +19,39 @@ function outputHtmlPath(distDir, routePath) {
     return path.join(distDir, `${trimmed}.html`);
 }
 
-async function buildSSRBundle(frameworkDirectory, mode) {
-    const ssrConfigPath = path.resolve(frameworkDirectory, 'rspack.ssr.config.js');
+async function buildSSRBundle(mode) {
+    // In-process, like the client build: the config comes from a function call
+    // rather than a --config flag, and compiler.close() flushes the persistent
+    // cache. The APLOS_SSR env var the old spawn set was never read anywhere.
+    const config = await createSSRConfig({ mode, entry: SSR_ENTRY });
 
-    const [command, commandArgs] = rspackCommand([
-        '--mode=' + mode,
-        '--config', ssrConfigPath,
-        '--entry', SSR_ENTRY,
-    ]);
-
-    return new Promise((resolve, reject) => {
-        const child = spawn(command, commandArgs, {
-            env: { ...process.env, APLOS_SSR: '1' },
-        });
-
-        let stderr = '';
-        child.stdout.on('data', (d) => process.stdout.write(d));
-        child.stderr.on('data', (d) => {
-            stderr += d.toString();
-            process.stderr.write(d);
-        });
-        child.on('close', (code) => {
-            if (code !== 0) {
-                reject(new Error(`SSR bundle failed (exit ${code}): ${stderr}`));
-            } else {
-                resolve();
-            }
+    const stats = await new Promise((resolve) => {
+        const compiler = rspack(config);
+        compiler.run((runError, runStats) => {
+            compiler.close((closeError) => {
+                if (runError) {
+                    console.error(runError.message || runError);
+                    resolve(null);
+                } else if (closeError) {
+                    console.error(closeError.message || closeError);
+                    resolve(null);
+                } else {
+                    resolve(runStats);
+                }
+            });
         });
     });
+
+    if (!stats || stats.hasErrors()) {
+        const detail = stats
+            ? stats.toJson({ errors: true, all: false }).errors.map((e) => e.message || e).join('\n')
+            : 'rspack did not produce any stats';
+        throw new Error(`SSR bundle failed:\n${detail}`);
+    }
 }
 
 export default async function ssg({ mode, forceAll = false, outDir } = {}) {
     const projectDirectory = process.cwd();
-    const frameworkDirectory = path.resolve(__dirname, '../..');
     const distDir = path.join(projectDirectory, outDir || process.env.APLOS_OUT_DIR || 'dist');
     const cacheDir = path.join(projectDirectory, '.aplos', 'cache');
 
@@ -73,7 +73,7 @@ export default async function ssg({ mode, forceAll = false, outDir } = {}) {
     }
 
     console.log('\n  Building SSR bundle...');
-    await buildSSRBundle(frameworkDirectory, mode || 'production');
+    await buildSSRBundle(mode || 'production');
 
     const ssrBundlePath = path.join(cacheDir, SSR_BUNDLE_NAME);
     if (!fs.existsSync(ssrBundlePath)) {
