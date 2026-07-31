@@ -4,34 +4,98 @@ import Table from "cli-table3";
 import fs from "fs";
 
 
-// Function to check if URL matches a route pattern with requirements
-const matchRoute = (url, routePath, requirements = {}) => {
-  // Convert React Router path to regex
-  let pattern = routePath.replace(/\//g, '\\/');  // Escape forward slashes
-  
-  // Get parameter names first
-  const paramNames = [...routePath.matchAll(/:([^/]+)/g)].map(m => m[1]);
-  
-  // Replace each parameter with its requirement pattern or default
-  paramNames.forEach(paramName => {
-    const requirement = requirements[paramName] || '[^/]+';
-    pattern = pattern.replace(`:${paramName}`, `(${requirement})`);
+/**
+ * Tests a URL against a route path, honouring the route's `requirements`.
+ *
+ * Exported for tests: the URL-to-route answer this gives is the whole point of
+ * `aplos router:match`, and it is pure logic worth pinning directly.
+ *
+ * The path is built segment by segment rather than by patching a half-escaped
+ * string. The previous version escaped `/` only and left every other regex
+ * metacharacter live, so the `*` that `buildRouter` emits for a catch-all
+ * (`[...slug]` becomes `*`) was read as a quantifier: `/blog/*` compiled to
+ * `^\/blog\/*$`, which does not match `/blog/hello`. Every catch-all route in a
+ * project reported "does not match any route" while `router:debug` listed it.
+ * A literal `.` or `+` in a static path was mis-handled the same way.
+ */
+export const matchRoute = (url, routePath, requirements = {}) => {
+  const paramNames = [];
+
+  // `*` (catch-all) and `:param` are the only two dynamic constructs; everything
+  // else is literal text and gets escaped.
+  const pattern = routePath.replace(/\*|:([^/]+)|[^*:]+|:/g, (token, paramName) => {
+    if (token === '*') {
+      return '(.*)';
+    }
+    if (paramName) {
+      paramNames.push(paramName);
+      const requirement = requirements[paramName] || '[^/]+';
+      // Each param must contribute exactly ONE capture group, in order, or the
+      // index-based binding below hands a param its neighbour's value. A
+      // requirement is free to contain its own groups (`(\\d+)`, `(a|b)`), so
+      // they are demoted to non-capturing before wrapping.
+      return `(${neutralizeGroups(requirement)})`;
+    }
+    return escapeForRegExp(token);
   });
-    
-  const regex = new RegExp(`^${pattern}$`);
-  const match = url.match(regex);
-  
-  if (match) {
-    // Extract parameters
-    const params = {};
-    paramNames.forEach((name, index) => {
-      params[name] = match[index + 1];
-    });
-    return { match: true, params };
+
+  let regex;
+  try {
+    regex = new RegExp(`^${pattern}$`);
+  } catch {
+    // A malformed requirement must not crash the CLI.
+    return { match: false };
   }
-  
-  return { match: false };
+
+  const match = url.match(regex);
+  if (!match) {
+    return { match: false };
+  }
+
+  const params = {};
+  paramNames.forEach((name, index) => {
+    params[name] = match[index + 1];
+  });
+  return { match: true, params };
 };
+
+function escapeForRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Turns capturing groups in a user-supplied requirement into non-capturing ones,
+ * so each route param still owns exactly one group.
+ *
+ * A `(` that is escaped (`\(`) or already special (`(?:`, `(?=`, `(?<name>`) is
+ * left alone. The scan tracks escapes and character classes, where `(` is a
+ * literal and must not be rewritten.
+ */
+function neutralizeGroups(requirement) {
+  let out = '';
+  let inClass = false;
+
+  for (let i = 0; i < requirement.length; i++) {
+    const char = requirement[i];
+
+    if (char === '\\') {
+      // Copy the escape and whatever it escapes, verbatim.
+      out += char + (requirement[i + 1] ?? '');
+      i++;
+      continue;
+    }
+    if (char === '[') inClass = true;
+    else if (char === ']') inClass = false;
+
+    if (char === '(' && !inClass && requirement[i + 1] !== '?') {
+      out += '(?:';
+      continue;
+    }
+    out += char;
+  }
+
+  return out;
+}
 
 export default async (options) => {
   let projectDirectory = process.cwd();
