@@ -159,6 +159,10 @@ export default async (options) => {
         }
       });
       console.log(availableTable.toString());
+      // A failed match exits non-zero so the command can be scripted: `aplos
+      // router:match "$url" || …` was previously indistinguishable from a hit,
+      // since both returned 0.
+      process.exitCode = 1;
     }
     return;
   }
@@ -187,15 +191,22 @@ export default async (options) => {
       console.log(table.toString());
     } else {
       console.log("Component not found");
+      process.exitCode = 1;
     }
   } else {
     const table = new Table({
       head: ["Component", "File", "Scheme", "Host", "Path"],
     });
 
-    routes.map((route) => {
-      table.push([route.component, route.file ? `src/pages${route.file}` : "-", "Any", "Any", route.path]);
-    });
+    // `.aplos/cache/router.js` holds the page routes AND the raw route-config
+    // entries from aplos.config.js, which carry `source`/`paths` but no
+    // component or path. Listing those rendered a fully blank table row. The
+    // match branch above already guards this the same way.
+    routes
+      .filter((route) => route.path)
+      .forEach((route) => {
+        table.push([route.component, route.file ? `src/pages${route.file}` : "-", "Any", "Any", route.path]);
+      });
     console.log(table.toString());
   }
 };
