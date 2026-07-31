@@ -9,6 +9,24 @@ Each entry references its pull request (`#NN`) when there is one, or the short
 commit hash otherwise. Full release notes live on the
 [releases page](https://github.com/alpac0de/aplos/releases).
 
+## [Unreleased]
+
+### Added
+
+- Add `server.strictPort` to fail on a busy port instead of falling back
+
+### Changed
+
+- `APLOS_SERVER_PORT` no longer decides the fallback policy, only the port value
+
+### Fixed
+
+- `APLOS_SERVER_PORT` was ignored whenever a project set `server.port`
+- #42 Fix a middleware redirect being dropped on cold load, leaving a blank page
+- #42 Fix nested `_layout` files never reaching the route tree
+- #42 Fix `router:match` reporting no match for every catch-all route
+- #42 Drop the junk row from `router:debug`, and exit non-zero when nothing matches
+
 ## [0.16.0] - 2026-07-14
 
 ### Added

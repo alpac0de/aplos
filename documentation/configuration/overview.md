@@ -108,6 +108,40 @@ Or using environment variable:
 APLOS_SERVER_PORT=4000 npx aplos server
 ```
 
+### Busy ports
+
+By default a busy port falls back to the next free one, and the dev server prints
+which port it settled on:
+
+```
+⚠ Port 3000 is in use, using port 3001 instead.
+```
+
+Set `strictPort` when the port is a constraint rather than a preference:
+
+```javascript
+module.exports = {
+  server: {
+    port: 3000,
+    strictPort: true
+  }
+}
+```
+
+Aplos then fails instead of falling back:
+
+```
+✗ Port 3000 is already in use.
+```
+
+Use this whenever something outside the dev server has memorised the port: a
+reverse proxy registration, a docker port mapping, an OAuth redirect URI. Falling
+back in those cases points the other side at nothing.
+
+`strictPort` is a policy, and `APLOS_SERVER_PORT` only carries a value: setting
+the environment variable changes which port is used, never whether Aplos falls
+back.
+
 ## Head Configuration
 
 The `head` option sets default meta tags, title, and links injected into every page.

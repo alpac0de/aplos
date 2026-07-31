@@ -5,6 +5,12 @@ export default {
     // Server configuration
     server: {
         port: 3001,
+        // false (default): a busy port falls back to the next free one.
+        // true: fail instead. Use this when something outside the dev server has
+        // memorised the port (a reverse proxy registration, a docker port
+        // mapping, an OAuth redirect URI), where falling back would silently
+        // point that other side at nothing.
+        strictPort: false,
     },
     
     // Client-side runtime configuration
