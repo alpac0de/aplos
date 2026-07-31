@@ -498,11 +498,18 @@ function buildLayoutTree(pageDirectory, extensions) {
             });
 
         if (layoutFile) {
-            const layoutPath = pathPrefix ? path.join(pathPrefix, layoutFile) : layoutFile;
-            layouts.set(pathPrefix || '/', {
-                file: layoutPath,
+            const layoutFilePath = pathPrefix ? path.join(pathPrefix, layoutFile) : layoutFile;
+            // Keyed by route path, i.e. leading slash, forward slashes. `pathPrefix`
+            // is built with path.join, so it is both slash-less at the front and
+            // backslash-separated on Windows. Storing it raw made every nested
+            // layout unreachable: buildNestedRoutes looks up `'/' + segments.join('/')`,
+            // so `blog` was never found for `/blog` and the layout silently vanished
+            // from the route tree (it stayed in pages.js, bundled but unused).
+            const routePath = pathPrefix ? `/${pathPrefix.split(path.sep).join('/')}` : '/';
+            layouts.set(routePath, {
+                file: layoutFilePath,
                 component: generateLayoutName(pathPrefix),
-                path: pathPrefix || '/'
+                path: routePath
             });
         }
 
@@ -578,9 +585,12 @@ function buildNestedRoutes(pages, layoutTree) {
             nodes.push(node);
         });
 
-        // Add nested layouts
+        // Add nested layouts. Compared on segment boundaries rather than with a
+        // bare startsWith: `/blogger` starts with `/blog` as a string but is not
+        // nested under it, and would otherwise be pulled inside that layout.
+        const prefix = currentPath === '/' ? '/' : `${currentPath}/`;
         Array.from(layoutTree.keys())
-            .filter(layoutPath => layoutPath.startsWith(currentPath) && layoutPath !== currentPath)
+            .filter(layoutPath => layoutPath.startsWith(prefix) && layoutPath !== currentPath)
             .forEach(layoutPath => {
                 const layout = layoutTree.get(layoutPath);
                 nodes.push({
