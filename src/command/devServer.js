@@ -150,23 +150,54 @@ export default async () => {
         }
     });
 
-    // Determine port logic based on environment variable
-    let finalPort = config.server.port;
-    const isPortExplicitlySet = process.env.APLOS_SERVER_PORT;
-    
-    // If no explicit port set, find available port
-    if (!isPortExplicitlySet) {
+    // A busy port falls back to the next free one, unless `strictPort` says the
+    // port is a constraint rather than a preference.
+    //
+    // The policy used to hinge on WHICH CHANNEL carried the port: setting
+    // APLOS_SERVER_PORT refused to fall back, while `server.port` in
+    // aplos.config.js silently moved to another port. Both express the same
+    // intent, so the channel no longer decides. An explicit `strictPort` does,
+    // the way Vite models it. The env var still wins over the config file for the
+    // port VALUE; it just no longer changes the policy.
+    //
+    // Strict matters when something outside the dev server has memorised the
+    // port: a reverse-proxy registration, a docker port mapping, an OAuth
+    // redirect URI. Falling back there points the other side at nothing.
+    const configuredPort = config.server.port;
+    const strictPort = config.server.strictPort === true;
+
+    let finalPort = configuredPort;
+
+    if (strictPort) {
+        // Checked here rather than left to the dev server. RspackDevServer
+        // rethrows the listen error from an event handler, which no `.catch()` on
+        // start() can intercept, so the user gets a raw EADDRINUSE stack trace
+        // instead of a message naming the cause. Probing first keeps the failure
+        // legible.
+        if (!(await isPortAvailable(configuredPort))) {
+            console.error(`\x1b[31m✗ Port ${configuredPort} is already in use.\x1b[0m`);
+            console.error(
+                `\x1b[2m  server.strictPort is set, so Aplos will not fall back to another port.\x1b[0m`
+            );
+            process.exit(1);
+        }
+    } else {
         try {
-            finalPort = await findAvailablePort(config.server.port);
-            if (finalPort !== config.server.port) {
-                console.log(`Port ${config.server.port} is busy, using port ${finalPort}`);
+            finalPort = await findAvailablePort(configuredPort);
+            if (finalPort !== configuredPort) {
+                console.log(
+                    `\x1b[33m⚠ Port ${configuredPort} is in use, using port ${finalPort} instead.\x1b[0m`
+                );
+                console.log(
+                    `\x1b[2m  Set server.strictPort to fail instead of falling back.\x1b[0m`
+                );
             }
         } catch (error) {
             console.error(`Could not find available port: ${error.message}`);
             process.exit(1);
         }
     }
-    
+
     const devServerOptions = {
         hot: true,
         open: false,
@@ -191,8 +222,16 @@ export default async () => {
     };
 
     runServer().catch((error) => {
-        if (isPortExplicitlySet && error.code === 'EADDRINUSE') {
-            console.error(`Port ${finalPort} is already in use. Since APLOS_SERVER_PORT is set, refusing to use alternative port.`);
+        if (error.code === 'EADDRINUSE') {
+            // Only reachable under strictPort: the fallback path above already
+            // proved the port free otherwise (a race is still possible, and lands
+            // here with the same message, which is accurate either way).
+            console.error(
+                `\x1b[31m✗ Port ${finalPort} is already in use.\x1b[0m`
+            );
+            console.error(
+                `\x1b[2m  server.strictPort is set, so Aplos will not fall back to another port.\x1b[0m`
+            );
         } else {
             console.error(error);
         }
