@@ -92,7 +92,23 @@ function ActiveMiddlewareGate({ children }) {
                     return;
                 }
                 redirectChainRef.current += 1;
-                navigate(result.to, { replace: result.replace });
+                // Deferred by a microtask rather than called inline. React Router
+                // v7 drops a navigate() issued synchronously from a mount-time
+                // layout effect: the history entry does change (BrowserRouter
+                // updates window.location) but the router never re-renders, so
+                // the app is stuck on the `null` frame below, i.e. a permanently
+                // blank page. It is specific to the *first* mount; later
+                // navigations work inline. Yielding one microtask lets React
+                // finish its initial commit, after which navigate() is honoured.
+                //
+                // This does NOT weaken the anti-flash guarantee: `decidedFor`
+                // stays unset for this location, so the guarded tree is still
+                // never committed. The gate renders `null` until the redirect
+                // target settles.
+                queueMicrotask(() => {
+                    if (cancelled) return;
+                    navigate(result.to, { replace: result.replace });
+                });
                 // Leave `decidedFor` unset for this location: the navigate()
                 // will change the location and re-run this effect for the new
                 // target, which is where the decision that matters is made.
