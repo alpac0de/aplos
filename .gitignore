@@ -6,3 +6,4 @@ dist
 # framework out, not the committed fixtures the build tests run against.
 /src/pages
 /aplos.config.js
+.gstack/

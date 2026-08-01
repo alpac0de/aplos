@@ -81,11 +81,20 @@ describe('aplos router:debug', () => {
             // Drop the header row.
             .filter((cells) => cells[0] !== 'Component');
 
-        expect(rows.length).toBe(2);
+        // index, the catch-all, and the concrete `/blog/a` expanded from its
+        // `paths`. That third row is real: it is a route the SSG pre-renders,
+        // and listing it is the point of the command.
+        expect(rows.length).toBe(3);
         for (const [component, , , , routePath] of rows) {
             expect(component).not.toBe('');
             expect(routePath).not.toBe('');
         }
+    });
+
+    test('lists routes expanded from a catch-all\'s paths', async () => {
+        const { stdout } = await runCli(project, ['router:debug']);
+
+        expect(stdout).toContain('/blog/a');
     });
 
     test('exits non-zero when the component does not exist', async () => {

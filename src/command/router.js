@@ -1,7 +1,6 @@
 import { buildRouter } from "../build/router.js";
 import get_config from "../build/config.js";
 import Table from "cli-table3";
-import fs from "fs";
 
 
 /**
@@ -100,12 +99,11 @@ function neutralizeGroups(requirement) {
 export default async (options) => {
   let projectDirectory = process.cwd();
 
-  await buildRouter(await get_config(projectDirectory));
-
-  const data = fs
-    .readFileSync(projectDirectory + "/.aplos/cache/router.js")
-    .toString();
-  const routes = JSON.parse(data);
+  // Read from what the build returned rather than writing the cache, reading it
+  // back and parsing it. The round trip through disk was also what surfaced the
+  // raw aplos.config.js route entries (no component, no path) that used to
+  // render as a junk row: the returned result only contains real routes.
+  const { routes } = await buildRouter(await get_config(projectDirectory));
 
   // Handle router:match command
   if (options && options.url) {
@@ -186,7 +184,8 @@ export default async (options) => {
 
       table.push(["Scheme", ""]);
 
-      table.push(["Requirement", route.requirement]);
+      const reqs = route.requirements || {};
+      table.push(["Requirements", Object.keys(reqs).length > 0 ? JSON.stringify(reqs) : "NO CUSTOM"]);
 
       console.log(table.toString());
     } else {
@@ -198,10 +197,10 @@ export default async (options) => {
       head: ["Component", "File", "Scheme", "Host", "Path"],
     });
 
-    // `.aplos/cache/router.js` holds the page routes AND the raw route-config
-    // entries from aplos.config.js, which carry `source`/`paths` but no
-    // component or path. Listing those rendered a fully blank table row. The
-    // match branch above already guards this the same way.
+    // The guard is redundant now that the routes come from buildRouter's return
+    // value rather than the cache file (which also held raw aplos.config.js
+    // entries with no component or path, and rendered them as a blank row). Kept
+    // as a cheap invariant: nothing here should ever render a pathless row.
     routes
       .filter((route) => route.path)
       .forEach((route) => {
