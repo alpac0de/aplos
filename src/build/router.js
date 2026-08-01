@@ -258,6 +258,34 @@ export async function buildRouter(aplos) {
         console.error('Failed to write cache files:', error.message);
         throw error;
     }
+
+    // The routes this build produced, as data.
+    //
+    // Everything callers know about routes today, they know by reading the
+    // generated files back off disk and parsing them: `router:debug` does it in
+    // src/command/router.js, and the SSG rediscovers static routes through the
+    // SSR bundle. Both are re-derivations of something this function already
+    // held in memory and threw away.
+    //
+    // A copy, not the live array: `pages` entries are mutated while the tree is
+    // assembled, and handing out a reference would make that shape permanent.
+    // Only the fields a consumer can act on are exposed, so the internal record
+    // stays free to change.
+    return {
+        routes: pages.map((page) => ({
+            path: page.path,
+            component: page.component,
+            file: page.file,
+            static: page.static === true,
+            // Per-parameter regex constraints, as declared in aplos.config.js.
+            // `router:match` needs these to answer honestly: without them a URL
+            // matches a route whose requirements it actually fails.
+            requirements: page.requirements || page.requirement || {},
+            // Set only on routes expanded from a catch-all's `paths`; it names
+            // the source pattern they were rendered through.
+            sourcePath: page.sourcePath ?? null,
+        })),
+    };
 }
 
 /**
