@@ -216,7 +216,13 @@ export async function createRspackConfig({
         type: "filesystem",
         directory: rspackCacheDir("rspack-client"),
       },
-      buildDependencies: [path.resolve(frameworkRoot, "rspack.config.js")],
+      // aplos.config.js feeds loader options (reactCompiler), and rspack does not
+      // invalidate cached modules when only a loader option changes: turning the
+      // compiler off would keep serving the compiled output from a warm cache.
+      buildDependencies: [
+        path.resolve(frameworkRoot, "rspack.config.js"),
+        ...(fs.existsSync(configPath) ? [configPath] : []),
+      ],
     },
     stats: isDevelopment ? 'none' : 'normal',
     infrastructureLogging: {
