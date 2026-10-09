@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import '@/lib/prism-manual';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-jsx';
 import 'prismjs/components/prism-tsx';
