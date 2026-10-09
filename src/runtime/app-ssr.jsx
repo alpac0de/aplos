@@ -1,24 +1,19 @@
 import React, { createElement } from 'react';
-import { StaticRouter, Routes, Route } from 'react-router';
+import { StaticRouter, useRoutes } from 'react-router';
 
 import { routeTree } from '@aplos_routes';
 import { CustomError, NoMatch } from '@aplos_pages';
 import { reactStrictMode } from '@aplos_head';
 
 import ErrorBoundary from './ErrorBoundary.jsx';
+import { toRouteObjects } from './route-objects.js';
 import DefaultErrorPage from './DefaultErrorPage.jsx';
 
-function renderRoutes(nodes) {
-    return nodes.map((node, i) => {
-        if (node.children) {
-            return (
-                <Route key={i} element={createElement(node.element)}>
-                    {renderRoutes(node.children)}
-                </Route>
-            );
-        }
-        return <Route key={i} path={node.path} element={createElement(node.element)} />;
-    });
+function AppRoutes() {
+    return useRoutes([
+        ...toRouteObjects(routeTree),
+        { path: '*', element: createElement(NoMatch) },
+    ]);
 }
 
 export default function AppSSR({ url }) {
@@ -26,10 +21,7 @@ export default function AppSSR({ url }) {
     const tree = (
         <ErrorBoundary errorComponent={ErrorComponent}>
             <StaticRouter location={url}>
-                <Routes>
-                    {renderRoutes(routeTree)}
-                    <Route path="*" element={createElement(NoMatch)} />
-                </Routes>
+                <AppRoutes />
             </StaticRouter>
         </ErrorBoundary>
     );

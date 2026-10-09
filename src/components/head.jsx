@@ -6,6 +6,9 @@ export default function Head({ children }) {
     useEffect(() => {
         const managedElements = [];
 
+        // Reading children as data is the point of this component: each one is
+        // mirrored into document.head rather than rendered.
+        // eslint-disable-next-line @eslint-react/no-children-for-each
         Children.forEach(children, (child) => {
             if (!child || !child.props) return;
 
