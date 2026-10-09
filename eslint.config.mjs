@@ -1,7 +1,7 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import pluginReact from "eslint-plugin-react";
-import pluginReactCompiler from "eslint-plugin-react-compiler";
+import pluginReactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 /** @type {import('eslint').Linter.Config[]} */
@@ -24,12 +24,10 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
+  // Carries the React Compiler rules that eslint-plugin-react-compiler used to.
+  pluginReactHooks.configs.flat["recommended-latest"],
   {
-    plugins: {
-      "react-compiler": pluginReactCompiler,
-    },
     rules: {
-      "react-compiler/react-compiler": "error",
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
       "react/no-unescaped-entities": "off",
