@@ -13,23 +13,19 @@ export default function About() {
 }
 ```
 
-When you run `bun run build --static`, Aplos emits `dist/about.html` containing the fully rendered HTML. Crawlers see the content. The browser displays it before any JavaScript runs.
+When you run `aplos build`, Aplos emits `dist/about.html` containing the fully rendered HTML. Crawlers see the content. The browser displays it before any JavaScript runs.
 
 ## Build with static rendering
 
+Every `aplos build` pre-renders the pages that carry `"use static"`, along with the URLs listed in `paths`. No flag is needed.
+
+To pre-render every route instead, directive or not, pass `--static`:
+
 ```bash
-bun run build --static
+aplos build --static
 ```
 
-Or, in `package.json`:
-
-```json
-{
-  "scripts": {
-    "build": "aplos build --static"
-  }
-}
-```
+Routes with parameters (`/blog/:slug`) are still only pre-rendered through `paths`.
 
 Output:
 
@@ -124,7 +120,7 @@ For those, leave them as SPA pages — they will be client-rendered as before.
 
 ## How it works
 
-When you run `aplos build --static`, Aplos:
+When you run `aplos build`, Aplos:
 
 1. Builds a server-side rendering bundle targeting Node (Rspack with `target: 'node'`).
 2. Collects the routes marked as static (via `"use static"` or matching a `paths` config).
