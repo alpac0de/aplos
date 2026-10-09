@@ -132,6 +132,31 @@ export async function loadFixture(name) {
             });
         },
 
+        /**
+         * Hydrates the pre-rendered `page` (a path under the output directory) at
+         * `url`, resolving with `{ root, emittedTitle, title, errors }`: #root's
+         * HTML, the title before and after the client ran, and every error React
+         * reported.
+         */
+        hydrate(page, url) {
+            return new Promise((resolve, reject) => {
+                const child = spawn(
+                    process.execPath,
+                    [path.join(helpersDir, 'hydrate-client.mjs'), path.join(root, outDir), url, page],
+                    { cwd: frameworkDir },
+                );
+
+                let stdout = '';
+                let stderr = '';
+                child.stdout.on('data', (d) => { stdout += d; });
+                child.stderr.on('data', (d) => { stderr += d; });
+                child.on('close', (code) => {
+                    if (code !== 0) reject(new Error(`could not hydrate ${page}: ${stderr}`));
+                    else resolve(JSON.parse(stdout));
+                });
+            });
+        },
+
         writeSource(p, contents) {
             const target = path.join(root, p);
             return fs.mkdir(path.dirname(target), { recursive: true })

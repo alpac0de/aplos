@@ -268,3 +268,63 @@ describe('react compiler', () => {
         expect(await appChunksContain('react.memo_cache_sentinel')).toBe(false);
     }, 120_000);
 });
+
+// A pre-rendered page that does not hydrate cleanly builds fine and only shows
+// up as a console error in the browser, which nothing here used to look at.
+describe('hydration of pre-rendered pages', () => {
+    let fixture;
+
+    beforeAll(async () => {
+        fixture = await loadFixture('basic');
+    });
+
+    afterAll(() => fixture?.cleanup());
+
+    test('a "use static" page hydrates without errors', async () => {
+        const { code } = await fixture.build({ mode: 'production' });
+        expect(code).toBe(0);
+
+        const { root, emittedTitle, errors } = await fixture.hydrate('static.html', '/static');
+
+        expect(errors).toEqual([]);
+        expect(root).toContain('<h1>Static</h1>');
+        // The whole document is rebuilt, head included, not only #root.
+        expect(emittedTitle).toBe('Static page');
+    }, 120_000);
+
+    // A head script loaded from a CDN is part of the document, not of dist/.
+    test('a page with an external head script still hydrates', async () => {
+        await fixture.writeSource(
+            'aplos.config.js',
+            "export default { head: { script: [{ src: 'https://cdn.example.com/analytics.js', async: true }] } };\n",
+        );
+        const { code } = await fixture.build({ mode: 'production' });
+        expect(code).toBe(0);
+
+        const { errors } = await fixture.hydrate('static.html', '/static');
+
+        expect(errors).toEqual([]);
+    }, 120_000);
+
+    // Proves the check has teeth: a page whose server and client output differ
+    // must be reported, or the test above would pass on any page.
+    test('a page that renders differently on the client is reported', async () => {
+        await fixture.writeSource(
+            'src/pages/mismatch.jsx',
+            [
+                '"use static";',
+                'export default function Mismatch() {',
+                "    return <p>{typeof window === 'undefined' ? 'server' : 'client'}</p>;",
+                '}',
+                '',
+            ].join('\n'),
+        );
+        const { code } = await fixture.build({ mode: 'production' });
+        expect(code).toBe(0);
+
+        const { errors } = await fixture.hydrate('mismatch.html', '/mismatch');
+
+        // #418 is React's minified hydration mismatch.
+        expect(errors.some((e) => /#418|hydrat/i.test(e))).toBe(true);
+    }, 120_000);
+});
