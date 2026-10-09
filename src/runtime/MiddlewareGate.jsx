@@ -69,6 +69,9 @@ function ActiveMiddlewareGate({ children }) {
 
         function letThrough() {
             redirectChainRef.current = 0;
+            // The decision has to come from an effect: the middleware may be async
+            // and may navigate, neither of which can happen during render.
+            // eslint-disable-next-line @eslint-react/set-state-in-effect
             setDecidedFor(locationKey);
         }
 
