@@ -175,7 +175,14 @@ export function injectMetaTags(html, meta) {
         head = removeTag(head, element);
     }
 
-    return `${head}${renderHead(routeElements)}\n  ${tail}`;
+    // A repeatable tag the configured head already wrote (a favicon the page
+    // declares again) is not written a second time.
+    const added = routeElements.filter((element) => !hasTag(head, element));
+    if (added.length === 0) {
+        return `${head}${tail}`;
+    }
+
+    return `${head}${renderHead(added)}\n  ${tail}`;
 }
 
 /**
@@ -198,10 +205,10 @@ function removeTag(head, element) {
     if (tag === 'title') {
         pattern = /<title>[\s\S]*?<\/title>/i;
     } else if (tag === 'meta') {
-        const name = attrs.name || attrs.property;
+        const name = attrs.name || attrs.property || attrs['http-equiv'];
         if (!name) return head;
 
-        const key = attrs.name ? 'name' : 'property';
+        const key = attrs.name ? 'name' : attrs.property ? 'property' : 'http-equiv';
         // The attribute may be quoted either way and carry others alongside it.
         pattern = new RegExp(
             `<meta[^>]*\\b${key}=["']${escapeForRegExp(name)}["'][^>]*>`,
@@ -225,15 +232,7 @@ function removeTag(head, element) {
  * script. Inert regions are masked out before the match and restored after.
  */
 function replaceOutsideInertRegions(html, pattern) {
-    const inert = [];
-    const masked = html.replace(
-        /<!--[\s\S]*?-->|<script\b[^>]*>[\s\S]*?<\/script>/gi,
-        (region) => {
-            const token = ` ${inert.length} `;
-            inert.push(region);
-            return token.padEnd(region.length, ' ').slice(0, region.length);
-        },
-    );
+    const { masked } = maskInertRegions(html);
 
     const match = pattern.exec(masked);
     if (!match) return html;
@@ -248,6 +247,31 @@ function replaceOutsideInertRegions(html, pattern) {
     if (html[end] === '\n') end++;
 
     return html.slice(0, start) + html.slice(end);
+}
+
+/**
+ * Blanks out comments and script elements, keeping every offset, so a pattern
+ * only ever matches live markup. Returns the regions it blanked, in order.
+ */
+function maskInertRegions(html) {
+    const inert = [];
+    const masked = html.replace(
+        /<!--[\s\S]*?-->|<script\b[^>]*>[\s\S]*?<\/script>/gi,
+        (region) => {
+            const token = ` ${inert.length} `;
+            inert.push(region);
+            return token.padEnd(region.length, ' ').slice(0, region.length);
+        },
+    );
+    return { masked, inert };
+}
+
+/** Whether `head` already carries this exact tag as markup, not as inert text. */
+function hasTag(head, element) {
+    const rendered = renderHead([element], '');
+    const { masked, inert } = maskInertRegions(head);
+    // A script is itself a blanked region: present only if one is that very tag.
+    return element.tag === 'script' ? inert.includes(rendered) : masked.includes(rendered);
 }
 
 function escapeForRegExp(value) {

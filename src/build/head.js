@@ -28,12 +28,36 @@ const IDENTITY = {
 // here, but the keys never were, and og/twitter keys can come straight from a CMS.
 const VALID_ATTRIBUTE_NAME = /^[A-Za-z][A-Za-z0-9:_.-]*$/;
 
+/** Whether `name` can be written as an attribute; anything else is dropped. */
+export function isValidAttributeName(name) {
+    return VALID_ATTRIBUTE_NAME.test(name);
+}
+
 /** Escapes character data. `<title>` holds text, so quotes are fine, brackets are not. */
 export function escapeText(value) {
     return String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+}
+
+/**
+ * Makes a script body safe to inline. It is raw text, so entities would reach
+ * the script verbatim (`&&` turning into `&amp;&amp;`). Two things are broken
+ * up, following the HTML parser: `</script`, which ends the element early, and
+ * a `<script` that follows a `<!--`, the one pairing that switches the parser
+ * into a state where the real closing tag no longer counts. A `<!--` alone (an
+ * old-style comment) and a `<script` alone (`a <script` is code) stay as they
+ * are. `<` reads as `<` in a JavaScript string and in JSON, so an
+ * `application/ld+json` body stays valid.
+ */
+export function escapeScript(value) {
+    const body = String(value).replace(/<(?=\/script)/gi, '\\u003C');
+    const comment = body.indexOf('<!--');
+    if (comment === -1) {
+        return body;
+    }
+    return body.slice(0, comment) + body.slice(comment).replace(/<(?=script)/gi, '\\u003C');
 }
 
 /** Escapes an attribute value, which sits inside double quotes. */
@@ -76,15 +100,25 @@ export function toHeadElements(config = {}) {
     }
 
     for (const attrs of config.meta || []) {
-        if (attrs && typeof attrs === 'object') elements.push({ tag: 'meta', attrs });
+        if (attrs && typeof attrs === 'object') {
+            // `httpEquiv` is accepted, but the attribute is spelled `http-equiv`;
+            // the browser would otherwise read it back as `httpequiv`.
+            const { httpEquiv, ...rest } = attrs;
+            elements.push({ tag: 'meta', attrs: httpEquiv === undefined ? attrs : { 'http-equiv': httpEquiv, ...rest } });
+        }
     }
 
     for (const attrs of config.link || []) {
         if (attrs && typeof attrs === 'object') elements.push({ tag: 'link', attrs });
     }
 
-    for (const attrs of config.script || []) {
-        if (attrs && typeof attrs === 'object') elements.push({ tag: 'script', attrs, children: '' });
+    for (const entry of config.script || []) {
+        if (entry && typeof entry === 'object') {
+            // `innerHTML` is the script's body, not an attribute: written out as
+            // one, an inline script was never executed.
+            const { innerHTML, ...attrs } = entry;
+            elements.push({ tag: 'script', attrs, children: innerHTML === undefined ? '' : String(innerHTML) });
+        }
     }
 
     return elements;
@@ -97,15 +131,24 @@ export function toHeadElements(config = {}) {
  * link) are keyed by identity and the page wins. Everything else accumulates.
  * Without this, a page that sets its own description shipped two of them.
  */
+/**
+ * The key a tag is merged on (`title`, `meta:name=description`, …), or null for
+ * a tag that can legitimately appear several times.
+ */
+export function identityOf({ tag, attrs = {} }) {
+    const identify = IDENTITY[tag];
+    const key = identify ? identify(attrs) : null;
+    return key === undefined ? null : key;
+}
+
 export function mergeHead(globalElements = [], routeElements = []) {
     const merged = [];
     const byIdentity = new Map();
 
     for (const element of [...globalElements, ...routeElements]) {
-        const identify = IDENTITY[element.tag];
-        const key = identify ? identify(element.attrs || {}) : null;
+        const key = identityOf(element);
 
-        if (key === null || key === undefined) {
+        if (key === null) {
             merged.push(element);
             continue;
         }
@@ -128,7 +171,7 @@ function renderElement({ tag, attrs = {}, children }) {
             if (value === false || value === null || value === undefined) return false;
             // A key that cannot be a valid attribute name is dropped rather than
             // written out, where it could close the tag and inject markup.
-            return VALID_ATTRIBUTE_NAME.test(name);
+            return isValidAttributeName(name);
         })
         .map(([name, value]) => (value === true ? name : `${name}="${escapeAttribute(value)}"`))
         .join(' ');
@@ -136,6 +179,8 @@ function renderElement({ tag, attrs = {}, children }) {
     const open = rendered ? `<${tag} ${rendered}>` : `<${tag}>`;
 
     if (children === undefined) return open;
+
+    if (tag === 'script') return `${open}${escapeScript(children)}</${tag}>`;
 
     return `${open}${escapeText(children)}</${tag}>`;
 }

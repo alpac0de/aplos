@@ -11,6 +11,17 @@ commit hash otherwise. Full release notes live on the
 
 ## [Unreleased]
 
+### Added
+
+- The head follows client-side navigation: each route's `meta` is merged over the configured head, as the SSG does at build time, and a page served by the SPA shell gets its `meta` too
+
+### Fixed
+
+- Fix the client duplicating every configured head tag on load, and replacing a pre-rendered page's title with `defaultTitle`
+- Fix an inline `head.script` (`innerHTML`) being written out as an attribute instead of the script's body
+- Fix a pre-rendered page writing a head tag twice when its `meta` repeats one from the configured head
+- Fix a `meta` entry using `httpEquiv` being written as an `httpEquiv` attribute, which browsers do not read as `http-equiv`; a page's one now replaces the configured one
+
 ## [0.17.0] - 2026-10-09
 
 ### Added

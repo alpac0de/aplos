@@ -64,6 +64,10 @@ export async function buildRouter(aplos) {
             path = found.destination;
         }
 
+        // The file's own pattern, kept for dynamic pages: React Router names a
+        // catch-all param `*`, the page's meta function expects the file's name.
+        const pattern = path.includes('[') ? path : undefined;
+
         path = path.replace(/\[\.\.\..*?]/g, '*');
         path = path.replace(/\[(.*?)]/g, ':$1');
 
@@ -79,6 +83,9 @@ export async function buildRouter(aplos) {
                 "requirement": {},
                 "static": staticDirective
             };
+            if (pattern) {
+                config.pattern = pattern;
+            }
 
             routes.push(config);
             pages.push(config);
@@ -370,6 +377,7 @@ function serializeRouteTree(nodes, indent = '') {
         }
         if (node.path !== undefined) parts.push(`${inner}path: ${JSON.stringify(node.path)}`);
         if (node.sourcePath) parts.push(`${inner}sourcePath: ${JSON.stringify(node.sourcePath)}`);
+        if (node.pattern) parts.push(`${inner}pattern: ${JSON.stringify(node.pattern)}`);
         if (node.static === true) parts.push(`${inner}static: true`);
         if (node.children) {
             parts.push(`${inner}children: ${serializeRouteTree(node.children, inner)}`);
@@ -383,16 +391,11 @@ function serializeRouteTree(nodes, indent = '') {
  * Generate head.js content — pure JS
  */
 function generateHeadFile(head, reactStrictMode) {
-    const { defaultTitle, titleTemplate, meta = [], link = [], script = [] } = head;
-    const headObj = {};
-    if (defaultTitle) headObj.defaultTitle = defaultTitle;
-    if (titleTemplate) headObj.titleTemplate = titleTemplate;
-    if (meta.length > 0) headObj.meta = meta;
-    if (link.length > 0) headObj.link = link;
-    if (script.length > 0) headObj.script = script;
-
+    // The whole head config, as the build injects it: the client merges each
+    // route's meta over it on navigation, and a field left out here (the
+    // description, og tags) would vanish from the head after the first route.
     const lines = [];
-    lines.push(`export default ${JSON.stringify(headObj, null, 2)};`);
+    lines.push(`export default ${JSON.stringify(head || {}, null, 2)};`);
     lines.push(`export const reactStrictMode = ${!!reactStrictMode};`);
     return lines.join('\n') + '\n';
 }
@@ -606,6 +609,9 @@ function buildNestedRoutes(pages, layoutTree) {
             }
             if (page.sourcePath) {
                 node.sourcePath = page.sourcePath;
+            }
+            if (page.pattern) {
+                node.pattern = page.pattern;
             }
             if (page.inlineMeta) {
                 node.inlineMeta = page.inlineMeta;

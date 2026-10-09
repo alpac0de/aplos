@@ -88,8 +88,9 @@ describe('buildRouter with catch-all routes', () => {
         const cacheDir = path.join(testProjectDir, '.aplos', 'cache');
         const routesContent = await fs.readFile(path.join(cacheDir, 'routes.js'), 'utf-8');
 
-        // Should contain wildcard path, not :...slug
+        // Should contain wildcard path, not :...slug. The file's own pattern is
+        // kept alongside, for the page's meta params.
         expect(routesContent).toContain('"/documentation/*"');
-        expect(routesContent).not.toContain('...slug');
+        expect(routesContent).not.toContain(':...slug');
     });
 });
