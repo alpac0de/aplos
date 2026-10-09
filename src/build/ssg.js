@@ -101,6 +101,7 @@ export default async function ssg({ mode, forceAll = false, outDir } = {}) {
 
     console.log(`  Pre-rendering ${staticRoutes.length} route(s)...`);
     let rendered = 0;
+    const failed = [];
     for (const route of staticRoutes) {
         try {
             const html = render(route);
@@ -116,9 +117,16 @@ export default async function ssg({ mode, forceAll = false, outDir } = {}) {
             rendered++;
         } catch (err) {
             console.error(`    ✗ ${route}: ${err.message}`);
+            failed.push(route);
         }
     }
     console.log(`  Pre-rendered ${rendered}/${staticRoutes.length} route(s).`);
+
+    // A page that asked to be static and could not be rendered must fail the build:
+    // otherwise the deploy ships without its HTML and nobody reads the ✗ above.
+    if (failed.length > 0) {
+        throw new Error(`${failed.length} static route(s) could not be pre-rendered: ${failed.join(', ')}`);
+    }
 }
 
 /**

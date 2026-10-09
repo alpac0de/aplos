@@ -150,3 +150,27 @@ describe('build failure handling', () => {
         expect(code).not.toBe(0);
     }, 120_000);
 });
+
+describe('static rendering failures', () => {
+    let fixture;
+
+    beforeAll(async () => {
+        fixture = await loadFixture('basic');
+    });
+
+    afterAll(() => fixture?.cleanup());
+
+    // A static page that threw during pre-rendering was logged and skipped, and the
+    // build still exited 0: the deploy shipped without that page's HTML.
+    test('a static page that throws while rendering fails the build', async () => {
+        await fixture.writeSource(
+            'src/pages/explodes.jsx',
+            '"use static";\nexport default function Explodes() { throw new Error("boom"); }\n',
+        );
+
+        const { code, stderr } = await fixture.build({ mode: 'production' });
+
+        expect(code).not.toBe(0);
+        expect(stderr).toContain('/explodes');
+    }, 120_000);
+});
