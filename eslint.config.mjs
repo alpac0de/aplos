@@ -1,6 +1,6 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
-import pluginReact from "eslint-plugin-react";
+import eslintReact from "@eslint-react/eslint-plugin";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
@@ -15,24 +15,15 @@ export default [
         ...globals.node,
       },
     },
-    settings: {
-      react: {
-        version: "detect",
-      },
-    },
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
-  pluginReact.configs.flat.recommended,
+  eslintReact.configs.recommended,
   // Carries the React Compiler rules that eslint-plugin-react-compiler used to.
   pluginReactHooks.configs.flat["recommended-latest"],
-  {
-    rules: {
-      "react/react-in-jsx-scope": "off",
-      "react/prop-types": "off",
-      "react/no-unescaped-entities": "off",
-    },
-  },
+  // @eslint-react ships its own rules-of-hooks and compiler checks: turn off the
+  // react-hooks copies so a violation is reported once, not twice.
+  eslintReact.configs["disable-conflict-eslint-plugin-react-hooks"],
   {
     files: ["**/*.cjs"],
     languageOptions: {
