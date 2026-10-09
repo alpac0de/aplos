@@ -76,6 +76,17 @@ describe('injectMetaTags', () => {
         expect(result).toContain('/app.css');
     });
 
+    // A page's http-equiv directive overrides the configured one, as a named
+    // meta does; two active refresh directives were shipped otherwise.
+    test('a page http-equiv meta replaces the configured one', () => {
+        const html = page('  <meta http-equiv="refresh" content="60">');
+
+        const result = injectMetaTags(html, { meta: [{ httpEquiv: 'refresh', content: '5' }] });
+
+        expect(result.match(/http-equiv="refresh"/g)).toHaveLength(1);
+        expect(result).toContain('<meta http-equiv="refresh" content="5">');
+    });
+
     // The tag only appears inside a comment: that is not the head carrying it.
     test('a repeatable tag found only in inert text is still written', () => {
         const html = page('  <!-- <link rel="alternate" hreflang="fr" href="/fr"> -->');

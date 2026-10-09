@@ -205,10 +205,10 @@ function removeTag(head, element) {
     if (tag === 'title') {
         pattern = /<title>[\s\S]*?<\/title>/i;
     } else if (tag === 'meta') {
-        const name = attrs.name || attrs.property;
+        const name = attrs.name || attrs.property || attrs['http-equiv'];
         if (!name) return head;
 
-        const key = attrs.name ? 'name' : 'property';
+        const key = attrs.name ? 'name' : attrs.property ? 'property' : 'http-equiv';
         // The attribute may be quoted either way and carry others alongside it.
         pattern = new RegExp(
             `<meta[^>]*\\b${key}=["']${escapeForRegExp(name)}["'][^>]*>`,
