@@ -18,10 +18,15 @@ commit hash otherwise. Full release notes live on the
 ### Changed
 
 - `APLOS_SERVER_PORT` no longer decides the fallback policy, only the port value
+- `reactCompiler: true` now runs the React Compiler natively in SWC; `@babel/core`, `babel-plugin-react-compiler` and `@swc/react-compiler` are no longer dependencies
+- #45 The build fails when a static page throws while being pre-rendered, instead of shipping without its HTML
+- #45 The build fails when a dynamic route marked `"use static"` has no `paths` to expand it, instead of skipping it silently
 
 ### Fixed
 
 - `APLOS_SERVER_PORT` was ignored whenever a project set `server.port`
+- Fix a warm build cache surviving a change to `aplos.config.js`
+- #45 Fix the `paths` documentation, which described a config shape the router does not read
 - #42 Fix a middleware redirect being dropped on cold load, leaving a blank page
 - #42 Fix nested `_layout` files never reaching the route tree
 - #42 Fix `router:match` reporting no match for every catch-all route

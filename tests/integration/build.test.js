@@ -209,3 +209,55 @@ describe('static dynamic routes', () => {
         expect(await fixture.readFile('blog/hello.html')).toContain('<h1>Post</h1>');
     }, 120_000);
 });
+
+// The compiler leaves a memo cache check in every component it compiles. React's
+// own runtime carries the same symbol, so only the app chunks are searched: a
+// match there means the page itself was compiled, not just that React is bundled.
+describe('react compiler', () => {
+    let fixture;
+
+    beforeAll(async () => {
+        fixture = await loadFixture('basic');
+        await fixture.writeSource(
+            'src/pages/counter.jsx',
+            [
+                "import { useState } from 'react';",
+                'export default function Counter() {',
+                '    const [count, setCount] = useState(0);',
+                '    return <button onClick={() => setCount(count + 1)}>{count}</button>;',
+                '}',
+                '',
+            ].join('\n'),
+        );
+    });
+
+    afterAll(() => fixture?.cleanup());
+
+    async function appChunksContain(needle) {
+        const files = (await fixture.readdir()).filter((f) => f.endsWith('.js') && !f.startsWith('vendors'));
+        for (const file of files) {
+            if ((await fixture.readFile(file)).includes(needle)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    test('reactCompiler: true compiles the pages', async () => {
+        await fixture.writeSource('aplos.config.js', 'export default { reactCompiler: true };\n');
+
+        const { code } = await fixture.build({ mode: 'production' });
+
+        expect(code).toBe(0);
+        expect(await appChunksContain('react.memo_cache_sentinel')).toBe(true);
+    }, 120_000);
+
+    test('the pages are left alone without reactCompiler', async () => {
+        await fixture.writeSource('aplos.config.js', 'export default {};\n');
+
+        const { code } = await fixture.build({ mode: 'production' });
+
+        expect(code).toBe(0);
+        expect(await appChunksContain('react.memo_cache_sentinel')).toBe(false);
+    }, 120_000);
+});

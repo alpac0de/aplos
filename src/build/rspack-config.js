@@ -216,7 +216,13 @@ export async function createRspackConfig({
         type: "filesystem",
         directory: rspackCacheDir("rspack-client"),
       },
-      buildDependencies: [path.resolve(frameworkRoot, "rspack.config.js")],
+      // aplos.config.js feeds loader options (reactCompiler), and rspack does not
+      // invalidate cached modules when only a loader option changes: turning the
+      // compiler off would keep serving the compiled output from a warm cache.
+      buildDependencies: [
+        path.resolve(frameworkRoot, "rspack.config.js"),
+        ...(fs.existsSync(configPath) ? [configPath] : []),
+      ],
     },
     stats: isDevelopment ? 'none' : 'normal',
     infrastructureLogging: {
@@ -259,18 +265,6 @@ export async function createRspackConfig({
           test: /\.(js|ts|jsx|tsx)$/,
           exclude: /node_modules\/(?!aplos)|bower_components|\.aplos[\\/]cache/,
           use: [
-            // Loaders run bottom-up: SWC transpiles first (TS/JSX → JS), then the
-            // React Compiler loader (opt-in) runs on top. react-refresh is handled
-            // natively by SWC (see transform.react.refresh below), so Babel is no
-            // longer on the dev path at all — SWC alone is ~7x faster.
-            //
-            // When `reactCompiler: true`, the loader uses @swc/react-compiler's
-            // native detector to invoke Babel ONLY on files that actually contain
-            // components/hooks to memoize; everything else stays SWC-only. Enable
-            // via `reactCompiler: true` in aplos.config.js.
-            reactCompilerEnabled && {
-              loader: path.resolve(frameworkRoot, "src/build/react-compiler-loader.cjs"),
-            },
             {
               loader: "builtin:swc-loader",
               options: {
@@ -284,6 +278,10 @@ export async function createRspackConfig({
                       runtime: "automatic",
                       refresh: isDevelopment,
                     },
+                    // Opt-in via `reactCompiler: true` in aplos.config.js. SWC runs
+                    // the Rust port of the React Compiler natively, so Babel is not
+                    // involved at any point of the build.
+                    reactCompiler: reactCompilerEnabled,
                   },
                 },
                 env: {
@@ -291,7 +289,7 @@ export async function createRspackConfig({
                 },
               },
             },
-          ].filter(Boolean),
+          ],
         },
         {
           test: /\.css$/,
