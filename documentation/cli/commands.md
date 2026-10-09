@@ -59,7 +59,7 @@ Output goes to `dist/` by default.
 | Flag | Description |
 |---|---|
 | `--mode <mode>` | Sets the build mode. Defaults to `development`; pass `production` for optimized output. |
-| `--static` | Pre-render opt-in pages to static HTML (SSG). See [Static rendering](/documentation/static-rendering). |
+| `--static` | Pre-render every route without parameters, not only the `"use static"` pages a build always pre-renders. See [Static rendering](/documentation/static-rendering). |
 | `--out-dir <dir>` | Directory the build is emitted to, relative to the project root. Defaults to `dist`. |
 
 The output directory is resolved in this order: the `--out-dir` flag, then the
@@ -68,10 +68,10 @@ The output directory is resolved in this order: the `--out-dir` flag, then the
 **Examples:**
 
 ```bash
-# Production build, SPA only
+# Production build, pre-rendering the "use static" pages
 aplos build --mode production
 
-# Production build with static pre-rendering for opt-in pages
+# Production build, pre-rendering every route without parameters
 aplos build --mode production --static
 
 # Emit the build to a custom directory

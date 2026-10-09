@@ -42,7 +42,7 @@ program
   )
   .option(
     "--static",
-    "Pre-render each static route to HTML (SSG). Dynamic routes fall back to SPA.",
+    "Pre-render every route without parameters, not only the \"use static\" pages every build pre-renders.",
     false
   )
   .option(
