@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Link } from 'aplos/navigation';
 import '@/styles/components/footer.css';
 
 export default function Footer() {
+  const [year] = useState(() => new Date().getFullYear());
+
   return (
     <footer className="site-footer">
       <div className="footer-inner">
-        <span>&copy; {new Date().getFullYear()} Aplos by <a href="https://alpacode.fr" target="_blank" rel="noopener noreferrer">alpacode</a>. MIT License.</span>
+        <span>&copy; {year} Aplos by <a href="https://alpacode.fr" target="_blank" rel="noopener noreferrer">alpacode</a>. MIT License.</span>
         <div className="footer-links">
           <Link to="/documentation">Documentation</Link>
           <Link to="/help">Help</Link>
