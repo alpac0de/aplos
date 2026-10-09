@@ -150,3 +150,62 @@ describe('build failure handling', () => {
         expect(code).not.toBe(0);
     }, 120_000);
 });
+
+describe('static rendering failures', () => {
+    let fixture;
+
+    beforeAll(async () => {
+        fixture = await loadFixture('basic');
+    });
+
+    afterAll(() => fixture?.cleanup());
+
+    // A static page that threw during pre-rendering was logged and skipped, and the
+    // build still exited 0: the deploy shipped without that page's HTML.
+    test('a static page that throws while rendering fails the build', async () => {
+        await fixture.writeSource(
+            'src/pages/explodes.jsx',
+            '"use static";\nexport default function Explodes() { throw new Error("boom"); }\n',
+        );
+
+        const { code, stderr } = await fixture.build({ mode: 'production' });
+
+        expect(code).not.toBe(0);
+        expect(stderr).toContain('/explodes');
+    }, 120_000);
+});
+
+describe('static dynamic routes', () => {
+    let fixture;
+
+    beforeAll(async () => {
+        fixture = await loadFixture('basic');
+        await fixture.writeSource(
+            'src/pages/blog/[slug].jsx',
+            '"use static";\nexport default function Post() { return <h1>Post</h1>; }\n',
+        );
+    });
+
+    afterAll(() => fixture?.cleanup());
+
+    // There is no concrete URL to render for /blog/:slug, so the SSG skipped it
+    // without a word and the page the user asked to pre-render never was.
+    test('a static dynamic route with no paths fails the build', async () => {
+        const { code, stderr } = await fixture.build({ mode: 'production' });
+
+        expect(code).not.toBe(0);
+        expect(stderr).toContain('/blog/:slug');
+    }, 120_000);
+
+    test('a static dynamic route expanded through paths builds', async () => {
+        await fixture.writeSource(
+            'aplos.config.js',
+            "export default { routes: [{ source: '/blog/[slug]', paths: ['/blog/hello'] }] };\n",
+        );
+
+        const { code } = await fixture.build({ mode: 'production' });
+
+        expect(code).toBe(0);
+        expect(await fixture.readFile('blog/hello.html')).toContain('<h1>Post</h1>');
+    }, 120_000);
+});

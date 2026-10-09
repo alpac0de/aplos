@@ -55,28 +55,27 @@ This is the SPA-first, static-on-opt-in model: keep dynamic logic where you need
 
 ## Pre-render dynamic routes
 
-To pre-render a route like `/blog/:slug`, list the values to expand at build time via the `paths` option in `aplos.config.js`:
+To pre-render a route like `/blog/:slug`, list the URLs to generate at build time with the `paths` option in `aplos.config.js`. `source` is the page's file path pattern, and each entry in `paths` is a full URL:
 
 ```js
 // aplos.config.js
 export default {
   routes: [
     {
-      path: '/blog/:slug',
-      paths: ['hello-world', 'second-post'],
+      source: '/blog/[slug]',
+      paths: ['/blog/hello-world', '/blog/second-post'],
     },
     {
-      path: '/products/:id',
-      paths: async () => {
-        const products = await fetchProducts();
-        return products.map((p) => p.id);
-      },
+      source: '/products/[id]',
+      paths: () => loadProductIds().map((id) => `/products/${id}`),
     },
   ],
 };
 ```
 
-At build time, each combination is expanded into its own static HTML file:
+`paths` is an array or a function returning one. The function is called synchronously, so read the data it needs from disk rather than over the network.
+
+At build time, each URL is pre-rendered into its own static HTML file:
 
 ```
 dist/blog/hello-world.html
@@ -84,6 +83,8 @@ dist/blog/second-post.html
 dist/products/42.html
 dist/products/43.html
 ```
+
+A dynamic page that carries `"use static"` must be expanded this way: there is no URL to render for `/blog/:slug` itself, so the build fails until `paths` lists some. Likewise, a static page that throws while rendering fails the build instead of being left out of `dist/`.
 
 ## Per-route metadata
 

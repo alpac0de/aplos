@@ -39,6 +39,35 @@ export function getStaticRoutes({ forceAll = false } = {}) {
     return Array.from(new Set(acc));
 }
 
+function collectNodes(nodes, acc) {
+    for (const node of nodes) {
+        acc.push(node);
+        if (node.children) {
+            collectNodes(node.children, acc);
+        }
+    }
+    return acc;
+}
+
+/**
+ * Dynamic routes marked static that no `paths` entry expanded. `walk` has to skip
+ * them since there is no concrete URL to render, so they are reported instead of
+ * being dropped without a word.
+ */
+export function getUnexpandedStaticRoutes() {
+    const nodes = collectNodes(routeTree, []);
+    const expanded = new Set(
+        nodes
+            .filter((node) => node.sourcePath)
+            .map((node) => node.sourcePath.replace(/\[\.\.\..*?]/g, '*').replace(/\[(.*?)]/g, ':$1'))
+    );
+
+    return nodes
+        .filter((node) => node.static === true && node.path !== undefined && !isStaticPath(node.path))
+        .filter((node) => !expanded.has(node.path))
+        .map((node) => node.path);
+}
+
 function findRouteModule(nodes, url) {
     for (const node of nodes) {
         if (node.children) {
@@ -101,4 +130,4 @@ export function getRouteMeta(url) {
     return node.meta;
 }
 
-export default { render, getStaticRoutes, getRouteMeta };
+export default { render, getStaticRoutes, getUnexpandedStaticRoutes, getRouteMeta };
