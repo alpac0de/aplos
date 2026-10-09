@@ -11,6 +11,8 @@ commit hash otherwise. Full release notes live on the
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-09
+
 ### Added
 
 - #43 Add `server.strictPort` to fail on a busy port instead of falling back
@@ -281,6 +283,8 @@ First usable version: a minimalist React framework with file-based routing, buil
 - #1 Migrate to Rspack
 - 3289400 Switch to `bun.lock`
 
+[Unreleased]: https://github.com/alpac0de/aplos/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/alpac0de/aplos/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/alpac0de/aplos/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/alpac0de/aplos/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/alpac0de/aplos/compare/v0.13.0...v0.14.0
