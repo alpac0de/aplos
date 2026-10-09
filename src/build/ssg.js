@@ -88,6 +88,15 @@ export default async function ssg({ mode, forceAll = false, outDir } = {}) {
         throw new Error('SSG: SSR bundle must export render(url) and getStaticRoutes().');
     }
 
+    const getUnexpandedStaticRoutes = ssrMod.getUnexpandedStaticRoutes || ssrMod.default?.getUnexpandedStaticRoutes;
+    const unexpanded = typeof getUnexpandedStaticRoutes === 'function' ? getUnexpandedStaticRoutes() : [];
+    if (unexpanded.length > 0) {
+        throw new Error(
+            `dynamic route(s) marked static with no \`paths\` to pre-render: ${unexpanded.join(', ')}. ` +
+            'List the URLs to generate with `paths` in aplos.config.js, or drop "use static".'
+        );
+    }
+
     const staticRoutes = getStaticRoutes({ forceAll });
     if (staticRoutes.length === 0) {
         return;

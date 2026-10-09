@@ -174,3 +174,38 @@ describe('static rendering failures', () => {
         expect(stderr).toContain('/explodes');
     }, 120_000);
 });
+
+describe('static dynamic routes', () => {
+    let fixture;
+
+    beforeAll(async () => {
+        fixture = await loadFixture('basic');
+        await fixture.writeSource(
+            'src/pages/blog/[slug].jsx',
+            '"use static";\nexport default function Post() { return <h1>Post</h1>; }\n',
+        );
+    });
+
+    afterAll(() => fixture?.cleanup());
+
+    // There is no concrete URL to render for /blog/:slug, so the SSG skipped it
+    // without a word and the page the user asked to pre-render never was.
+    test('a static dynamic route with no paths fails the build', async () => {
+        const { code, stderr } = await fixture.build({ mode: 'production' });
+
+        expect(code).not.toBe(0);
+        expect(stderr).toContain('/blog/:slug');
+    }, 120_000);
+
+    test('a static dynamic route expanded through paths builds', async () => {
+        await fixture.writeSource(
+            'aplos.config.js',
+            "export default { routes: [{ source: '/blog/[slug]', paths: ['/blog/hello'] }] };\n",
+        );
+
+        const { code } = await fixture.build({ mode: 'production' });
+
+        expect(code).toBe(0);
+        expect(await fixture.readFile('blog/hello.html')).toContain('<h1>Post</h1>');
+    }, 120_000);
+});
