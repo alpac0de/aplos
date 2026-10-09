@@ -13,26 +13,27 @@ commit hash otherwise. Full release notes live on the
 
 ### Added
 
-- Add `server.strictPort` to fail on a busy port instead of falling back
+- #43 Add `server.strictPort` to fail on a busy port instead of falling back
 
 ### Changed
 
-- `APLOS_SERVER_PORT` no longer decides the fallback policy, only the port value
-- `typescript` is no longer installed with `aplosjs`; projects that type-check declare it themselves, as the scaffold does
-- New projects scaffold on TypeScript 6, without the deprecated `baseUrl` and with a declaration for CSS imports
-- Upgrade glob to 13
-- Upgrade Rspack to 2.2 and react-refresh to 0.19. SWC Wasm plugins passed through a custom rspack config must be rebuilt for `swc_core` 77
-- `reactCompiler: true` now runs the React Compiler natively in SWC; `@babel/core`, `babel-plugin-react-compiler` and `@swc/react-compiler` are no longer dependencies
+- #43 `APLOS_SERVER_PORT` no longer decides the fallback policy, only the port value
+- #48 `typescript` is no longer installed with `aplosjs`; projects that type-check declare it themselves, as the scaffold does
+- #48 New projects scaffold on TypeScript 6, without the deprecated `baseUrl` and with a declaration for CSS imports
+- #48 Upgrade glob to 13
+- #47 Upgrade Rspack to 2.2 and react-refresh to 0.19. SWC Wasm plugins passed through a custom rspack config must be rebuilt for `swc_core` 77
+- #46 `reactCompiler: true` now runs the React Compiler natively in SWC; `@babel/core`, `babel-plugin-react-compiler` and `@swc/react-compiler` are no longer dependencies
 - #45 The build fails when a static page throws while being pre-rendered, instead of shipping without its HTML
 - #45 The build fails when a dynamic route marked `"use static"` has no `paths` to expand it, instead of skipping it silently
 
 ### Fixed
 
-- `APLOS_SERVER_PORT` was ignored whenever a project set `server.port`
-- Fix a warm build cache surviving a change to `aplos.config.js`
-- Fix the client bundle pairing the project's `react` with the framework's own `react-dom` when Aplos is linked rather than installed
-- Fix the dev server banner listing the React Compiler when it is off, and showing `v0.0.1` instead of the installed version
+- #43 `APLOS_SERVER_PORT` was ignored whenever a project set `server.port`
+- #46 Fix a warm build cache surviving a change to `aplos.config.js`
+- #50 Fix the client bundle pairing the project's `react` with the framework's own `react-dom` when Aplos is linked rather than installed
+- #51 Fix the dev server banner listing the React Compiler when it is off, and showing `v0.0.1` instead of the installed version
 - #45 Fix the `paths` documentation, which described a config shape the router does not read
+- #52 Fix the documentation presenting `--static` as required to pre-render `"use static"` pages; every build does, and `--static` pre-renders every route without parameters
 - #42 Fix a middleware redirect being dropped on cold load, leaving a blank page
 - #42 Fix nested `_layout` files never reaching the route tree
 - #42 Fix `router:match` reporting no match for every catch-all route
