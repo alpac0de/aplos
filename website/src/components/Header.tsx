@@ -8,9 +8,14 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="header-inner">
-        <Link to="/" className="header-logo">
-          aplos<span>.</span> <a href="https://alpacode.fr" target="_blank" rel="noopener noreferrer" className="header-author">by alpacode</a>
-        </Link>
+        {/* Side by side, not nested: a link inside a link is invalid HTML, which
+            the browser rewrites before hydration and React then reports. */}
+        <div className="header-brand">
+          <Link to="/" className="header-logo">
+            aplos<span>.</span>
+          </Link>
+          <a href="https://alpacode.fr" target="_blank" rel="noopener noreferrer" className="header-author">by alpacode</a>
+        </div>
 
         <button
           type="button"

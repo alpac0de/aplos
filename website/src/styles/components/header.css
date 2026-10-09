@@ -28,13 +28,18 @@
     span {
       color: var(--color-accent);
     }
+  }
 
-    .header-author {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      font-weight: 400;
-      margin-left: var(--space-1);
-    }
+  .header-brand {
+    display: flex;
+    align-items: baseline;
+  }
+
+  .header-author {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    font-weight: 400;
+    margin-left: var(--space-1);
   }
 
   nav {
