@@ -3,11 +3,36 @@ import { HtmlRspackPlugin, CssExtractRspackPlugin, CopyRspackPlugin, sources } f
 import { ReactRefreshRspackPlugin as ReactRefreshPlugin } from "@rspack/plugin-react-refresh";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { createRequire } from "module";
 import { pathToFileURL } from "url";
 import { merge } from "webpack-merge";
 import { toHeadElements, renderHead } from "./head.js";
 
 const __filename = fileURLToPath(import.meta.url);
+
+// Imported by the runtime or emitted by SWC and the React Compiler.
+const REACT_SUBPATHS = [
+  "react/jsx-runtime",
+  "react/jsx-dev-runtime",
+  "react/compiler-runtime",
+  "react-dom/client",
+];
+
+// Exact-match aliases pinning each subpath to the file the project would load,
+// resolved through the package's exports map. A subpath the project's version
+// does not ship is left alone.
+function projectSubpathAliases(projectDirectory, requests) {
+  const projectRequire = createRequire(path.join(projectDirectory, "package.json"));
+  const aliases = {};
+  for (const request of requests) {
+    try {
+      aliases[`${request}$`] = projectRequire.resolve(request);
+    } catch {
+      // Not installed in the project, or not exported by its version.
+    }
+  }
+  return aliases;
+}
 const __dirname = path.dirname(__filename);
 
 // This module lives in src/build/, so the framework root is two levels up.
@@ -314,6 +339,11 @@ export async function createRspackConfig({
         "react-dom$": path.resolve(projectDirectory, "node_modules/react-dom"),
         "react-router-dom$": path.resolve(projectDirectory, "node_modules/react-router-dom"),
         "react-router$": path.resolve(projectDirectory, "node_modules/react-router"),
+        // Subpaths need the same treatment: from a framework file, `react-dom/client`
+        // or the `react/jsx-runtime` SWC emits would otherwise resolve to the
+        // framework's own copy whenever it has one (a linked checkout), pairing it
+        // with the project's react and crashing on the version mismatch.
+        ...projectSubpathAliases(projectDirectory, REACT_SUBPATHS),
         "aplos/config": path.resolve(frameworkRoot, "src/config.js"),
         "aplos/navigation": path.resolve(
           frameworkRoot,

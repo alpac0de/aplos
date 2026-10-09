@@ -30,6 +30,7 @@ commit hash otherwise. Full release notes live on the
 
 - `APLOS_SERVER_PORT` was ignored whenever a project set `server.port`
 - Fix a warm build cache surviving a change to `aplos.config.js`
+- Fix the client bundle pairing the project's `react` with the framework's own `react-dom` when Aplos is linked rather than installed
 - #45 Fix the `paths` documentation, which described a config shape the router does not read
 - #42 Fix a middleware redirect being dropped on cold load, leaving a blank page
 - #42 Fix nested `_layout` files never reaching the route tree
