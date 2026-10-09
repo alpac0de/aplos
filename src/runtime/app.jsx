@@ -1,28 +1,23 @@
 import React, { createElement, useEffect } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
-import { Routes, BrowserRouter, Route } from 'react-router-dom';
+import { BrowserRouter, useRoutes } from 'react-router-dom';
 
 import { routeTree } from '@aplos_routes';
 import { CustomError, NoMatch } from '@aplos_pages';
 import headConfig, { reactStrictMode } from '@aplos_head';
 
 import ErrorBoundary from './ErrorBoundary.jsx';
+import { toRouteObjects } from './route-objects.js';
 import DefaultErrorPage from './DefaultErrorPage.jsx';
 import MiddlewareGate from './MiddlewareGate.jsx';
 
 const MANAGED_ATTR = "data-head-default";
 
-function renderRoutes(nodes) {
-    return nodes.map((node, i) => {
-        if (node.children) {
-            return (
-                <Route key={i} element={createElement(node.element)}>
-                    {renderRoutes(node.children)}
-                </Route>
-            );
-        }
-        return <Route key={i} path={node.path} element={createElement(node.element)} />;
-    });
+function AppRoutes() {
+    return useRoutes([
+        ...toRouteObjects(routeTree),
+        { path: '*', element: createElement(NoMatch) },
+    ]);
 }
 
 function HeadDefaults() {
@@ -88,10 +83,7 @@ function App() {
             <ErrorBoundary errorComponent={ErrorComponent}>
                 <BrowserRouter>
                     <MiddlewareGate>
-                        <Routes>
-                            {renderRoutes(routeTree)}
-                            <Route path="*" element={createElement(NoMatch)} />
-                        </Routes>
+                        <AppRoutes />
                     </MiddlewareGate>
                 </BrowserRouter>
             </ErrorBoundary>
