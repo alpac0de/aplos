@@ -93,6 +93,13 @@ describe('production build artifacts', () => {
     });
 
     // Locks dcfc275: production shipped source maps.
+    // Nothing else here runs the client bundle. It once paired the project's
+    // react with the framework's react-dom, which built fine and crashed in the
+    // browser on the version check.
+    test('the client bundle renders the page', async () => {
+        expect(await fixture.render('/')).toContain('<h1>Home</h1>');
+    }, 30_000);
+
     test('production emits no source maps', async () => {
         const files = await fixture.readdir();
         expect(files.some((f) => f.endsWith('.map'))).toBe(false);

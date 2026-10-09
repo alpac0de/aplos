@@ -112,6 +112,26 @@ export async function loadFixture(name) {
             }
         },
 
+        /** Runs the built client bundle in happy-dom at `url`, resolving with #root's HTML. */
+        render(url = '/') {
+            return new Promise((resolve, reject) => {
+                const child = spawn(
+                    process.execPath,
+                    [path.join(helpersDir, 'render-client.mjs'), path.join(root, outDir), url],
+                    { cwd: frameworkDir },
+                );
+
+                let stdout = '';
+                let stderr = '';
+                child.stdout.on('data', (d) => { stdout += d; });
+                child.stderr.on('data', (d) => { stderr += d; });
+                child.on('close', (code) => {
+                    if (code !== 0) reject(new Error(`client bundle failed to render ${url}: ${stderr}`));
+                    else resolve(stdout);
+                });
+            });
+        },
+
         writeSource(p, contents) {
             const target = path.join(root, p);
             return fs.mkdir(path.dirname(target), { recursive: true })

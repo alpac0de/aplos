@@ -54,4 +54,19 @@ describe('createRspackConfig', () => {
 
         expect(config.resolve.alias['@custom']).toBe('/somewhere');
     });
+
+    // From a framework file, a subpath such as `react-dom/client` resolved to the
+    // framework's own copy when it had one, next to the project's `react`.
+    test('React subpaths resolve to the project copy', async () => {
+        const reactDir = path.join(root, 'node_modules', 'react');
+        await fs.mkdir(reactDir, { recursive: true });
+        await fs.writeFile(path.join(reactDir, 'package.json'), '{"name":"react","version":"0.0.0"}\n');
+        await fs.writeFile(path.join(reactDir, 'jsx-runtime.js'), '');
+
+        const config = await createRspackConfig({ mode: 'production', projectDirectory: root });
+
+        expect(config.resolve.alias['react/jsx-runtime$']).toBe(await fs.realpath(path.join(reactDir, 'jsx-runtime.js')));
+        // Not installed in the project: left to normal resolution.
+        expect(config.resolve.alias['react-dom/client$']).toBeUndefined();
+    });
 });
