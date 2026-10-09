@@ -31,7 +31,6 @@ mock.module('aplos/internal/default-middleware', () => ({
     },
 }));
 
-const React = await import('react');
 const { createRoot } = await import('react-dom/client');
 
 const { MemoryRouter, Routes, Route } = await import('react-router-dom');
