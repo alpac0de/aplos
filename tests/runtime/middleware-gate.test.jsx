@@ -45,6 +45,20 @@ function flush(ms = 60) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// The gate renders nothing until it has decided, so the first markup is the
+// settled outcome. How long that takes varies with the number of renders a
+// case needs (a redirect chain runs a dozen) and with load: a fixed flush that
+// fits on an idle machine ran out under a busy test run.
+async function settle(timeout = 2000) {
+    const start = Date.now();
+    while (container.innerHTML === '') {
+        if (Date.now() - start > timeout) {
+            throw new Error(`the gate rendered nothing within ${timeout}ms`);
+        }
+        await flush(10);
+    }
+}
+
 let container;
 let root;
 let consoleErrors;
@@ -89,7 +103,7 @@ async function renderGate({ initial = '/dashboard', onRender } = {}) {
         </MemoryRouter>,
     );
 
-    await flush();
+    await settle();
     return container.innerHTML;
 }
 
