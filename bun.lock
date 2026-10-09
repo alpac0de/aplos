@@ -21,7 +21,6 @@
         "postcss-nested": "^7.0.2",
         "react-refresh": "^0.19.0",
         "style-loader": "^4.0.0",
-        "typescript": "^6.0.3",
         "webpack-merge": "^6.0.1",
       },
       "devDependencies": {
@@ -35,6 +34,7 @@
         "react": "^19.2.7",
         "react-dom": "^19.2.7",
         "react-router-dom": "^7.16.0",
+        "typescript": "^6.0.3",
         "typescript-eslint": "^8.62.0",
       },
       "peerDependencies": {
