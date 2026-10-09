@@ -11,6 +11,12 @@ export function toRouteObjects(nodes) {
         if (node.children) {
             return { element: createElement(node.element), children: toRouteObjects(node.children) };
         }
-        return { path: node.path, element: createElement(node.element) };
+        // `handle` is React Router's slot for route data: the page's meta rides
+        // along so the client can update the head on navigation.
+        return {
+            path: node.path,
+            element: createElement(node.element),
+            handle: { meta: node.meta ?? null, sourcePath: node.sourcePath, pattern: node.pattern },
+        };
     });
 }

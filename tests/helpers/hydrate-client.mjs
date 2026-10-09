@@ -6,7 +6,7 @@ import { GlobalRegistrator } from '@happy-dom/global-registrator';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const [distDir, url, page] = process.argv.slice(2);
+const [distDir, url, page, navigateTo] = process.argv.slice(2);
 // The bundles are evaluated by hand below; happy-dom must not fetch anything.
 GlobalRegistrator.register({
     url: `http://localhost${url}`,
@@ -58,9 +58,25 @@ for (const src of scripts) {
 // Hydration and the errors it raises land asynchronously; 200ms was measured
 // to miss them on a page with a few dozen components.
 await new Promise((resolve) => setTimeout(resolve, 2000));
-process.stdout.write(JSON.stringify({
+const result = {
     root: document.getElementById('root').innerHTML,
     emittedTitle,
     title: document.title,
+    head: document.head.innerHTML,
     errors,
-}));
+};
+
+// Optionally follow a client-side navigation, the way a link click would: a
+// history entry, then the popstate the router listens to.
+if (navigateTo) {
+    window.history.pushState({}, '', navigateTo);
+    window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }));
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    result.afterNavigation = {
+        root: document.getElementById('root').innerHTML,
+        title: document.title,
+        head: document.head.innerHTML,
+    };
+}
+
+process.stdout.write(JSON.stringify(result));

@@ -292,6 +292,50 @@ describe('hydration of pre-rendered pages', () => {
         expect(emittedTitle).toBe('Static page');
     }, 120_000);
 
+    // The build already writes the configured head into every document. The
+    // client wrote it again on mount: every tag was duplicated, and the title a
+    // pre-rendered page set from its meta was replaced by the default one.
+    test('the client keeps the head the page was pre-rendered with', async () => {
+        const { code } = await fixture.build({ mode: 'production' });
+        expect(code).toBe(0);
+
+        const { title, head } = await fixture.hydrate('static.html', '/static');
+
+        expect(title).toBe('Static page');
+        expect(head.match(/<meta name="description"/g)).toHaveLength(1);
+        expect(head.match(/<meta name="viewport"/g)).toHaveLength(1);
+    }, 120_000);
+
+    // Navigating away from a pre-rendered page left its title and description in
+    // place: nothing on the client updated the head between routes.
+    test('client-side navigation updates the head to the next route', async () => {
+        const { code } = await fixture.build({ mode: 'production' });
+        expect(code).toBe(0);
+
+        const { errors, afterNavigation } = await fixture.hydrate('static.html', '/static', '/');
+
+        expect(errors).toEqual([]);
+        expect(afterNavigation.root).toContain('<h1>Home</h1>');
+        expect(afterNavigation.title).toBe('Fixture');
+        expect(afterNavigation.head.match(/<meta name="description"[^>]*>/g)).toEqual([
+            '<meta name="description" content="Build fixture">',
+        ]);
+    }, 120_000);
+
+    // A route's meta reached the head only through the SSG: a page served by the
+    // SPA shell kept the default title.
+    test('a page loaded from the SPA shell gets its meta on the client', async () => {
+        const { code } = await fixture.build({ mode: 'production' });
+        expect(code).toBe(0);
+
+        const { title, head } = await fixture.hydrate('index.html', '/static');
+
+        expect(title).toBe('Static page');
+        expect(head.match(/<meta name="description"[^>]*>/g)).toEqual([
+            '<meta name="description" content="Pre-rendered at build time">',
+        ]);
+    }, 120_000);
+
     // A head script loaded from a CDN is part of the document, not of dist/.
     test('a page with an external head script still hydrates', async () => {
         await fixture.writeSource(
@@ -327,4 +371,146 @@ describe('hydration of pre-rendered pages', () => {
         // #418 is React's minified hydration mismatch.
         expect(errors.some((e) => /#418|hydrat/i.test(e))).toBe(true);
     }, 120_000);
+});
+
+// The client merges each route's meta over the configured head on navigation,
+// the way the SSG does at build time; both must land on the same head.
+describe('client-side head', () => {
+    let fixture;
+
+    beforeAll(async () => {
+        fixture = await loadFixture('basic');
+        await fixture.writeSource(
+            'src/pages/docs/[...path].jsx',
+            [
+                "export const meta = (url, params) => ({ title: 'Doc ' + params.path });",
+                'export default function Doc() { return <h1>Doc</h1>; }',
+                '',
+            ].join('\n'),
+        );
+        await fixture.writeSource(
+            'src/pages/translated.jsx',
+            [
+                '"use static";',
+                'export const meta = {',
+                "    title: 'Translated',",
+                "    description: 'In French too',",
+                "    link: [",
+                "        { rel: 'alternate', hreflang: 'fr', href: '/fr/translated' },",
+                "        { rel: 'icon', href: '/favicon.ico' },",
+                '    ],',
+                "    script: [{ type: 'application/ld+json', innerHTML: JSON.stringify({ name: '</script><!--' }) }],",
+                '};',
+                'export default function Translated() { return <h1>Translated</h1>; }',
+                '',
+            ].join('\n'),
+        );
+        await fixture.writeSource(
+            'src/pages/headed.jsx',
+            [
+                "import Head from 'aplos/head';",
+                'export default function Headed() {',
+                '    return <><Head><title>From Head</title></Head><h1>Headed</h1></>;',
+                '}',
+                '',
+            ].join('\n'),
+        );
+        await fixture.writeSource(
+            'src/pages/guides/[...slug].jsx',
+            [
+                "export const meta = (url, params) => ({ title: 'Guide ' + params.slug });",
+                'export default function Guide() { return <h1>Guide</h1>; }',
+                '',
+            ].join('\n'),
+        );
+        // No defaultTitle: a route without a title must not keep the last one.
+        await fixture.writeSource(
+            'aplos.config.js',
+            [
+                'export default {',
+                "    routes: [{ source: '/docs/[...path]', paths: ['/docs/a/b'] }],",
+                "    head: { description: 'Site', link: [{ rel: 'icon', href: '/favicon.ico' }] },",
+                '};',
+                '',
+            ].join('\n'),
+        );
+        const { code } = await fixture.build({ mode: 'production' });
+        expect(code).toBe(0);
+    }, 120_000);
+
+    afterAll(() => fixture?.cleanup());
+
+    // React Router names a catch-all param `*`; the SSG names it after the file.
+    test('a catch-all meta function gets the same params on both sides', async () => {
+        const prerendered = await fixture.hydrate('docs/a/b.html', '/docs/a/b');
+        const navigated = await fixture.hydrate('index.html', '/docs/a/b');
+
+        expect(prerendered.emittedTitle).toBe('Doc a/b');
+        expect(prerendered.title).toBe('Doc a/b');
+        expect(navigated.title).toBe('Doc a/b');
+    }, 30_000);
+
+    // Without `paths` there is no source to read the name from but the file's.
+    test('a catch-all served by the SPA shell gets its param by name', async () => {
+        const { title } = await fixture.hydrate('index.html', '/guides/x/y');
+
+        expect(title).toBe('Guide x/y');
+    }, 30_000);
+
+    // The SSG escapes an inline script's body; compared with the raw text, the
+    // pre-rendered copy went unrecognized and the script was added (and run) twice.
+    test("a route's inline script is not added a second time", async () => {
+        const { head, errors } = await fixture.hydrate('translated.html', '/translated');
+
+        expect(errors).toEqual([]);
+        expect(head.match(/<script type="application\/ld\+json">/g)).toHaveLength(1);
+    }, 30_000);
+
+    // The route also declares the configured favicon. Treated as the route's, it
+    // was removed on the way out, leaving the head without it.
+    // The SSG also wrote it twice on the page that repeats it.
+    test('a configured tag a route repeats outlives the route', async () => {
+        const favicon = /<link rel="icon" href="\/favicon.ico">/g;
+        const { head, afterNavigation } = await fixture.hydrate('translated.html', '/translated', '/');
+
+        expect(head.match(favicon)).toHaveLength(1);
+        expect(afterNavigation.head.match(favicon)).toHaveLength(1);
+    }, 30_000);
+
+    test("a route's repeatable tags come and go with it", async () => {
+        const alternate = /<link rel="alternate" hreflang="fr" href="\/fr\/translated">/g;
+
+        const loaded = await fixture.hydrate('translated.html', '/translated', '/');
+        expect(loaded.errors).toEqual([]);
+        // Written by the SSG, reused by the client rather than added twice.
+        expect(loaded.head.match(alternate)).toHaveLength(1);
+        expect(loaded.afterNavigation.head.match(alternate)).toBeNull();
+
+        const fromShell = await fixture.hydrate('index.html', '/translated');
+        expect(fromShell.head.match(alternate)).toHaveLength(1);
+    }, 30_000);
+
+    // Only part of the configured head reached the client, so a configured
+    // description a page had overridden vanished instead of coming back.
+    test('a configured field a page overrode comes back after it', async () => {
+        const { head, afterNavigation } = await fixture.hydrate('translated.html', '/translated', '/');
+
+        expect(head.match(/<meta name="description"[^>]*>/g)).toEqual(['<meta name="description" content="In French too">']);
+        expect(afterNavigation.head.match(/<meta name="description"[^>]*>/g)).toEqual(['<meta name="description" content="Site">']);
+    }, 30_000);
+
+    // A query change keeps the page mounted, so its <Head> does not run again:
+    // rewriting the head then would undo what it set.
+    test("a page's own <Head> survives a query change", async () => {
+        const { title, afterNavigation } = await fixture.hydrate('index.html', '/headed', '/headed?tab=2');
+
+        expect(title).toBe('From Head');
+        expect(afterNavigation.title).toBe('From Head');
+    }, 30_000);
+
+    test('a route without a title does not keep the previous one', async () => {
+        const { afterNavigation } = await fixture.hydrate('translated.html', '/translated', '/');
+
+        expect(afterNavigation.title).toBe('');
+    }, 30_000);
 });

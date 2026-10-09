@@ -1,93 +1,39 @@
-import React, { createElement, useEffect } from 'react';
+import React, { createElement, useMemo } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import { BrowserRouter, useRoutes } from 'react-router-dom';
 
 import { routeTree } from '@aplos_routes';
 import { CustomError, NoMatch } from '@aplos_pages';
-import headConfig, { reactStrictMode } from '@aplos_head';
+import { reactStrictMode } from '@aplos_head';
 
 import ErrorBoundary from './ErrorBoundary.jsx';
 import { toRouteObjects } from './route-objects.js';
 import DefaultErrorPage from './DefaultErrorPage.jsx';
 import MiddlewareGate from './MiddlewareGate.jsx';
+import RouteHead from './route-head.js';
 
-const MANAGED_ATTR = "data-head-default";
-
-function AppRoutes() {
-    return useRoutes([
-        ...toRouteObjects(routeTree),
-        { path: '*', element: createElement(NoMatch) },
-    ]);
-}
-
-function HeadDefaults() {
-    useEffect(() => {
-        if (!headConfig) return;
-
-        const { defaultTitle, meta = [], link = [], script = [] } = headConfig;
-
-        if (defaultTitle) {
-            document.title = defaultTitle;
-        }
-
-        const elements = [];
-
-        meta.forEach((m) => {
-            const el = document.createElement('meta');
-            Object.entries(m).forEach(([key, value]) => el.setAttribute(key, value));
-            el.setAttribute(MANAGED_ATTR, 'true');
-            document.head.appendChild(el);
-            elements.push(el);
-        });
-
-        link.forEach((l) => {
-            const el = document.createElement('link');
-            Object.entries(l).forEach(([key, value]) => el.setAttribute(key, value));
-            el.setAttribute(MANAGED_ATTR, 'true');
-            document.head.appendChild(el);
-            elements.push(el);
-        });
-
-        script.forEach((s) => {
-            const el = document.createElement('script');
-            Object.entries(s).forEach(([key, value]) => {
-                if (key === 'innerHTML') {
-                    el.textContent = value;
-                } else if (typeof value === 'boolean') {
-                    if (value) el.setAttribute(key, '');
-                } else {
-                    el.setAttribute(key, value);
-                }
-            });
-            el.setAttribute(MANAGED_ATTR, 'true');
-            document.head.appendChild(el);
-            elements.push(el);
-        });
-
-        return () => {
-            elements.forEach((el) => {
-                if (el.parentNode) el.parentNode.removeChild(el);
-            });
-        };
-    }, []);
-
-    return null;
+function AppRoutes({ routes }) {
+    return useRoutes(routes);
 }
 
 function App() {
     const ErrorComponent = CustomError || DefaultErrorPage;
+    const routes = useMemo(() => [
+        ...toRouteObjects(routeTree),
+        { path: '*', element: createElement(NoMatch) },
+    ], []);
 
     return (
-        <>
-            <HeadDefaults />
-            <ErrorBoundary errorComponent={ErrorComponent}>
-                <BrowserRouter>
-                    <MiddlewareGate>
-                        <AppRoutes />
-                    </MiddlewareGate>
-                </BrowserRouter>
-            </ErrorBoundary>
-        </>
+        <ErrorBoundary errorComponent={ErrorComponent}>
+            <BrowserRouter>
+                <MiddlewareGate>
+                    {/* Before the routes: its effect runs first, so a page's own
+                        <Head> still has the last word on the tags it sets. */}
+                    <RouteHead routes={routes} />
+                    <AppRoutes routes={routes} />
+                </MiddlewareGate>
+            </BrowserRouter>
+        </ErrorBoundary>
     );
 }
 

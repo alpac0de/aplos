@@ -391,16 +391,11 @@ function serializeRouteTree(nodes, indent = '') {
  * Generate head.js content — pure JS
  */
 function generateHeadFile(head, reactStrictMode) {
-    const { defaultTitle, titleTemplate, meta = [], link = [], script = [] } = head;
-    const headObj = {};
-    if (defaultTitle) headObj.defaultTitle = defaultTitle;
-    if (titleTemplate) headObj.titleTemplate = titleTemplate;
-    if (meta.length > 0) headObj.meta = meta;
-    if (link.length > 0) headObj.link = link;
-    if (script.length > 0) headObj.script = script;
-
+    // The whole head config, as the build injects it: the client merges each
+    // route's meta over it on navigation, and a field left out here (the
+    // description, og tags) would vanish from the head after the first route.
     const lines = [];
-    lines.push(`export default ${JSON.stringify(headObj, null, 2)};`);
+    lines.push(`export default ${JSON.stringify(head || {}, null, 2)};`);
     lines.push(`export const reactStrictMode = ${!!reactStrictMode};`);
     return lines.join('\n') + '\n';
 }

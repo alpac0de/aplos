@@ -134,15 +134,22 @@ export async function loadFixture(name) {
 
         /**
          * Hydrates the pre-rendered `page` (a path under the output directory) at
-         * `url`, resolving with `{ root, emittedTitle, title, errors }`: #root's
-         * HTML, the title before and after the client ran, and every error React
-         * reported.
+         * `url`, resolving with `{ root, emittedTitle, title, head, errors }`:
+         * #root's HTML, the title before and after the client ran, the head's HTML
+         * afterwards, and every error React reported. With `navigateTo`, the page
+         * then navigates client-side and `afterNavigation` holds the same fields.
          */
-        hydrate(page, url) {
+        hydrate(page, url, navigateTo) {
             return new Promise((resolve, reject) => {
                 const child = spawn(
                     process.execPath,
-                    [path.join(helpersDir, 'hydrate-client.mjs'), path.join(root, outDir), url, page],
+                    [
+                        path.join(helpersDir, 'hydrate-client.mjs'),
+                        path.join(root, outDir),
+                        url,
+                        page,
+                        ...(navigateTo ? [navigateTo] : []),
+                    ],
                     { cwd: frameworkDir },
                 );
 
