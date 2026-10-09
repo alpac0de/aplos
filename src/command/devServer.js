@@ -12,6 +12,10 @@ import os from 'os';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Read from the manifest, as `aplos --version` does: the banner had its own
+// hardcoded "v0.0.1".
+const { version } = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../package.json"), "utf8"));
+
 const getNetworkUrl = (port) => {
     const interfaces = os.networkInterfaces();
     for (const name of Object.keys(interfaces)) {
@@ -43,7 +47,7 @@ const printStartupMessage = (port, projectDirectory, readyTime, config) => {
     const features = detectFeatures(projectDirectory, config);
 
     console.log();
-    console.log('  \x1b[1m\x1b[36mAPLOS\x1b[0m \x1b[2mv0.0.1\x1b[0m  \x1b[32mready in ' + readyTime + 'ms\x1b[0m');
+    console.log(`  \x1b[1m\x1b[36mAPLOS\x1b[0m \x1b[2mv${version}\x1b[0m  \x1b[32mready in ` + readyTime + 'ms\x1b[0m');
     console.log();
     console.log(`  \x1b[1mLocal:\x1b[0m   http://localhost:${port}/`);
     if (networkUrl) {

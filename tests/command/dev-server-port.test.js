@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const frameworkDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const manifest = JSON.parse(await fs.readFile(path.join(frameworkDir, 'package.json'), 'utf8'));
 const ANSI_PATTERN = new RegExp(String.fromCharCode(27) + String.raw`\[[0-9;]*m`, 'g');
 
 const cleanups = [];
@@ -116,6 +117,8 @@ describe('dev server port selection', () => {
 
         expect(output).toContain(`http://localhost:${port}/`);
         expect(output).not.toContain('is in use');
+        // The banner names the installed version, not a hardcoded one.
+        expect(output).toContain(`APLOS v${manifest.version}`);
     }, 40_000);
 });
 
