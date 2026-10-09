@@ -1,9 +1,12 @@
-import { useState } from 'react';
 import { Link } from 'aplos/navigation';
 import '@/styles/components/footer.css';
 
 export default function Footer() {
-  const [year] = useState(() => new Date().getFullYear());
+  // Read on every render on purpose: a tab left open across New Year shows the
+  // new year on its next navigation. The site does not enable the React
+  // Compiler, so nothing memoizes this render.
+  // eslint-disable-next-line @eslint-react/purity
+  const year = new Date().getFullYear();
 
   return (
     <footer className="site-footer">
