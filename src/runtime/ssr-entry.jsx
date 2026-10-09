@@ -2,6 +2,7 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import AppSSR from './app-ssr.jsx';
 import { routeTree } from '@aplos_routes';
+import { resolveRouteMeta } from './route-meta.js';
 
 export function render(url) {
     return renderToString(<AppSSR url={url} />);
@@ -81,28 +82,6 @@ function findRouteModule(nodes, url) {
     return null;
 }
 
-function extractParams(sourcePath, url) {
-    if (!sourcePath) {
-        return {};
-    }
-    const sourceSegments = sourcePath.split('/').filter(Boolean);
-    const urlSegments = url.split('/').filter(Boolean);
-    const params = {};
-    for (let i = 0; i < sourceSegments.length; i++) {
-        const seg = sourceSegments[i];
-        const catchAll = seg.match(/^\[\.\.\.(.+)\]$/);
-        if (catchAll) {
-            params[catchAll[1]] = urlSegments.slice(i).join('/');
-            return params;
-        }
-        const dynamic = seg.match(/^\[(.+)\]$/);
-        if (dynamic) {
-            params[dynamic[1]] = urlSegments[i];
-        }
-    }
-    return params;
-}
-
 /**
  * Return the `meta` export of the page module matching `url`, if any.
  * Pages opt in by exporting `export const meta = { title, description, ... }`
@@ -114,20 +93,7 @@ function extractParams(sourcePath, url) {
  */
 export function getRouteMeta(url) {
     const node = findRouteModule(routeTree, url);
-    if (!node || node.meta === undefined || node.meta === null) {
-        return null;
-    }
-    if (typeof node.meta === 'function') {
-        const params = extractParams(node.sourcePath, url);
-        try {
-            const result = node.meta(url, params);
-            return result && typeof result === 'object' ? result : null;
-        } catch (err) {
-            console.error(`meta() threw for ${url}:`, err.message);
-            return null;
-        }
-    }
-    return node.meta;
+    return node ? resolveRouteMeta(node, url) : null;
 }
 
 export default { render, getStaticRoutes, getUnexpandedStaticRoutes, getRouteMeta };
