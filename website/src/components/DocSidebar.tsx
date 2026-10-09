@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'aplos/navigation';
-import { getAllDocs, docToUrl, humanize } from '@/lib/docs';
+import { getAllDocs, docToUrl, humanize, type DocEntry } from '@/lib/docs';
 import '@/styles/components/sidebar.css';
 
 interface Link {
@@ -47,8 +47,8 @@ function sortByOrder<T>(items: T[], getKey: (item: T) => string, order: string[]
 }
 
 function buildSections(): Section[] {
-  const rootDocs = [];
-  const docsByFolder = new Map<string, typeof rootDocs>();
+  const rootDocs: DocEntry[] = [];
+  const docsByFolder = new Map<string, DocEntry[]>();
 
   for (const doc of getAllDocs()) {
     if (doc.segments.length <= 1) {

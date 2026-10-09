@@ -16,6 +16,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@types/prismjs": "^1.26.0"
+    "@types/prismjs": "^1.26.0",
+    "typescript": "^6.0.3"
   }
 }
