@@ -76,13 +76,22 @@ describe('injectMetaTags', () => {
         expect(result).toContain('/app.css');
     });
 
+    // The tag only appears inside a comment: that is not the head carrying it.
+    test('a repeatable tag found only in inert text is still written', () => {
+        const html = page('  <!-- <link rel="alternate" hreflang="fr" href="/fr"> -->');
+
+        const result = injectMetaTags(html, { link: [{ rel: 'alternate', hreflang: 'fr', href: '/fr' }] });
+
+        expect(result.match(/<link rel="alternate"/g)).toHaveLength(2);
+    });
+
     test('a meta with neither name nor property is left alone', () => {
         const html = page('  <meta charset="utf-8">');
 
         const result = injectMetaTags(html, { meta: [{ charset: 'utf-8' }] });
 
-        // Nothing was removed; the route tag is appended alongside.
-        expect(result.match(/charset/g).length).toBeGreaterThanOrEqual(2);
+        // Nothing was removed, and the identical route tag is not written twice.
+        expect(result.match(/charset/g)).toHaveLength(1);
     });
 
     // The regression the `replaceOutsideInertRegions` helper exists for: a tag
