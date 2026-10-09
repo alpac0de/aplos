@@ -18,6 +18,7 @@ commit hash otherwise. Full release notes live on the
 ### Changed
 
 - `APLOS_SERVER_PORT` no longer decides the fallback policy, only the port value
+- Upgrade Rspack to 2.2 and react-refresh to 0.19. SWC Wasm plugins passed through a custom rspack config must be rebuilt for `swc_core` 77
 - `reactCompiler: true` now runs the React Compiler natively in SWC; `@babel/core`, `babel-plugin-react-compiler` and `@swc/react-compiler` are no longer dependencies
 - #45 The build fails when a static page throws while being pre-rendered, instead of shipping without its HTML
 - #45 The build fails when a dynamic route marked `"use static"` has no `paths` to expand it, instead of skipping it silently
