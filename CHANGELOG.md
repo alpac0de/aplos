@@ -15,6 +15,10 @@ commit hash otherwise. Full release notes live on the
 
 - The head follows client-side navigation: each route's `meta` is merged over the configured head, as the SSG does at build time, and a page served by the SPA shell gets its `meta` too
 
+### Changed
+
+- Upgrade Rspack to 2.3, dotenv to 18 and glob to 14
+
 ### Fixed
 
 - Fix the client duplicating every configured head tag on load, and replacing a pre-rendered page's title with `defaultTitle`
