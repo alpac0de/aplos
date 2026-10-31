@@ -43,9 +43,9 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@rspack/cli": "~2.2.8",
-    "@rspack/core": "~2.2.8",
-    "@rspack/dev-server": "~2.2.1",
+    "@rspack/cli": "~2.3.0",
+    "@rspack/core": "~2.3.0",
+    "@rspack/dev-server": "~2.2.2",
     "@rspack/plugin-html": "^0.5.8",
     "@rspack/plugin-react-refresh": "^2.0.2",
     "autoprefixer": "^10.5.0",
