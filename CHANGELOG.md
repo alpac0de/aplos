@@ -17,7 +17,7 @@ commit hash otherwise. Full release notes live on the
 
 ### Changed
 
-- Upgrade Rspack to 2.3, dotenv to 18 and glob to 14
+- Upgrade Rspack to 2.3.3, dotenv to 18 and glob to 14
 
 ### Fixed
 
